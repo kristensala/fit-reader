@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 fitparser="0.5.1"
 anyhow="1.0.68"
+rusqlite="0.28.0"
