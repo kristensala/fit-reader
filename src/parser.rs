@@ -28,10 +28,11 @@ pub struct Session {
     threshold_power: i64,
     sport: String,
     sub_sport: String,
-    avg_cadence: i64
+    avg_cadence: i64,
+    laps:  Vec<Lap>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Lap {
     start_time: f64,
     avg_power: i64,
@@ -116,7 +117,8 @@ impl <'a>FromIterator<&'a FitDataField> for Session {
             threshold_power: Value::try_into(threshold_power_field.value().to_owned()).unwrap(),
             sport: sport_field.value().to_string(),
             sub_sport: sub_sport_field.value().to_string(),
-            avg_cadence: Value::try_into(avg_candence_field.value().to_owned()).unwrap()
+            avg_cadence: Value::try_into(avg_candence_field.value().to_owned()).unwrap(),
+            laps: Vec::new()
         };
     }
 }
@@ -161,6 +163,7 @@ impl <'a>FromIterator<&'a FitDataField> for Lap {
     }
 }
 
+// TODO: add a list of  file paths as a parameter. Add a limit max 10 at a time
 pub fn init() -> Result<()> {
     println!("Parsing FIT files using Profile version: {}", fitparser::profile::VERSION);
     let mut fp = File::open("/home/salakris/Downloads/salakris-2023-01-08-l2-up-down-150--157110383.fit")
@@ -172,9 +175,7 @@ pub fn init() -> Result<()> {
     let session_data: Session = get_session_data(&fit_data)
         .context("Failed getting Session data")?;
 
-    let laps_data = get_laps_data(&fit_data).unwrap();
-
-    println!("{:#?}", laps_data);
+    println!("{:#?}", session_data);
 
     return Ok(());
 }
@@ -189,7 +190,9 @@ fn get_session_data(data: &Vec<FitDataRecord>) -> Result<Session> {
         .into_iter()
         .collect();
 
-    let parsed_data = Session::from_iter(data_fields.into_iter());
+    let mut parsed_data = Session::from_iter(data_fields.into_iter());
+    parsed_data.laps = get_laps_data(data).unwrap();
+
     return Ok(parsed_data);
 }
 
