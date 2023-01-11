@@ -20,6 +20,7 @@ enum FieldName {
 
 #[derive(Debug, Clone)]
 pub struct Session {
+    start_time: f64,
     total_time: f64,
     total_distance: f64,
     avg_power: i64,
@@ -69,6 +70,7 @@ impl <'a>FromIterator<&'a FitDataField> for Session {
                 || x.name() == FieldName::Sport.to_string()
                 || x.name() == FieldName::SubSport.to_string()
                 || x.name() == FieldName::AvgHeartRate.to_string()
+                || x.name() == FieldName::StartTime.to_string()
                 || x.name() == FieldName::ThresholdPower.to_string())
             .collect::<Vec<&FitDataField>>();
 
@@ -108,7 +110,12 @@ impl <'a>FromIterator<&'a FitDataField> for Session {
             .find(|&&x| x.name() == FieldName::AvgHeartRate.to_string())
             .expect("If the file is not corrupt, heart rate field should exist");
 
+        let start_time_field = fields.iter()
+            .find(|&&x| x.name() == FieldName::StartTime.to_string())
+            .unwrap();
+
         return Session {
+            start_time: Value::try_into(start_time_field.value().to_owned()).unwrap(),
             total_time: Value::try_into(time_field.value().to_owned()).unwrap(),
             total_distance: Value::try_into(distance_field.value().to_owned()).unwrap(),
             avg_power: Value::try_into(power_field.value().to_owned()).unwrap(),
