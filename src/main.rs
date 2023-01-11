@@ -8,6 +8,7 @@ pub mod db;
 
 #[derive(Debug)]
 enum FieldName {
+    StartTime,
     AvgPower,
     TotalMovingTime,
     TotalElapsedTime,
@@ -32,6 +33,15 @@ struct Session {
     avg_cadence: i64
 }
 
+#[derive(Debug)]
+struct Lap {
+    start_time: f64,
+    avg_power: i64,
+    avg_heart_rate: i64,
+    total_moving_time: f64,
+    total_distance: f64
+}
+
 impl fmt::Display for FieldName {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -43,13 +53,12 @@ impl fmt::Display for FieldName {
             FieldName::Sport => write!(f, "sport"),
             FieldName::SubSport => write!(f, "sub_sport"),
             FieldName::AvgHeartRate => write!(f, "avg_heart_rate"),
-            FieldName::ThresholdPower => write!(f, "threshold_power")
+            FieldName::ThresholdPower => write!(f, "threshold_power"),
+            FieldName::StartTime => write!(f, "start_time")
         }
     }
 }
 
-// Looks like I have to do the same for Lap. Maybe could use this one here
-// without duplicating too much
 impl <'a>FromIterator<&'a FitDataField> for Session {
     fn from_iter<T: IntoIterator<Item = &'a FitDataField>>(iter: T) -> Self {
         let fields = iter.into_iter()
@@ -98,7 +107,7 @@ impl <'a>FromIterator<&'a FitDataField> for Session {
         
         let avg_heart_rate_field = fields.iter()
             .find(|&&x| x.name() == FieldName::AvgHeartRate.to_string())
-            .unwrap();
+            .expect("If the file is not corrupt, heart rate field should exist");
 
         return Session {
             total_time: Value::try_into(time_field.value().to_owned()).unwrap(),
@@ -114,6 +123,46 @@ impl <'a>FromIterator<&'a FitDataField> for Session {
     }
 }
 
+impl <'a>FromIterator<&'a FitDataField> for Lap {
+    fn from_iter<T: IntoIterator<Item = &'a FitDataField>>(iter: T) -> Lap {
+        let fields = iter.into_iter()
+            .filter(|x| x.name() == FieldName::AvgPower.to_string()
+                || x.name() == FieldName::TotalDistace.to_string()
+                || x.name() == FieldName::TotalMovingTime.to_string()
+                || x.name() == FieldName::AvgHeartRate.to_string()
+                || x.name() == FieldName::StartTime.to_string())
+            .collect::<Vec<&FitDataField>>();
+
+        let power_field = fields.iter()
+            .find(|&&x| x.name() == FieldName::AvgPower.to_string())
+            .unwrap();
+
+        let distance_field = fields.iter()
+            .find(|&&x| x.name() == FieldName::TotalDistace.to_string())
+            .unwrap();
+
+        let total_moving_time_field = fields.iter()
+            .find(|&&x| x.name() == FieldName::TotalMovingTime.to_string())
+            .unwrap();
+
+        let avg_heart_rate_field = fields.iter()
+            .find(|&&x| x.name() == FieldName::AvgHeartRate.to_string())
+            .expect("If the file is not corrupt, heart rate field should exist");
+
+        let start_time_field = fields.iter()
+            .find(|&&x| x.name() == FieldName::StartTime.to_string())
+            .unwrap();
+
+        return Lap {
+            start_time: Value::try_into(start_time_field.value().to_owned()).unwrap(),
+            total_distance: Value::try_into(distance_field.value().to_owned()).unwrap(),
+            avg_power: Value::try_into(power_field.value().to_owned()).unwrap(),
+            total_moving_time: Value::try_into(total_moving_time_field.value().to_owned()).unwrap(),
+            avg_heart_rate: Value::try_into(avg_heart_rate_field.value().to_owned()).unwrap(),
+        }
+    }
+}
+
 fn main() -> Result<()> {
     println!("Parsing FIT files using Profile version: {}", fitparser::profile::VERSION);
     let mut fp = File::open("/home/salakris/Downloads/salakris-2023-01-08-l2-up-down-150--157110383.fit")
@@ -125,9 +174,9 @@ fn main() -> Result<()> {
     let session_data: Session = get_session_data(&fit_data)
         .context("Failed getting Session data")?;
 
-    let lap_data = get_lap_data(&fit_data).unwrap();
+    let laps_data = get_laps_data(&fit_data).unwrap();
 
-    println!("{:#?}", session_data);
+    println!("{:#?}", laps_data);
 
     return Ok(());
 }
@@ -146,15 +195,18 @@ fn get_session_data(data: &Vec<FitDataRecord>) -> Result<Session> {
     return Ok(parsed_data);
 }
 
-// lap has same datafields as the session
-// I need to put them together somehow
-fn get_lap_data(data: &Vec<FitDataRecord>) -> Result<()> {
-    let lap_data: Vec<&FitDataRecord> = data.into_iter()
+fn get_laps_data(data: &Vec<FitDataRecord>) -> Result<Vec<Lap>> {
+    let laps_data: Vec<&FitDataRecord> = data.into_iter()
         .filter(|x| x.kind() == MesgNum::Lap)
         .collect();
 
-    println!("{:#?}", lap_data.first().unwrap());
-    return Ok(());
+    let laps = laps_data.iter()
+        .map(|&x| {
+            let lap_fields: Vec<&FitDataField> = x.fields().into_iter().collect();
+            return Lap::from_iter(lap_fields.into_iter());
+        }).collect::<Vec<Lap>>();
+
+    return Ok(laps);
 }
 
 fn get_lap_record_data() -> Result<()> {
