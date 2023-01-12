@@ -22,7 +22,9 @@ pub fn init() -> SqliteResult<()> {
             total_distance real null,
             total_moving_time real null,
             total_elapsed_time real not null,
-            avg_cadence integer null
+            avg_cadence integer null,
+            serial_number integer null,
+            start_time text not null
         )",
         []
     )?;
@@ -36,6 +38,32 @@ pub fn init() -> SqliteResult<()> {
 
 pub fn insert_session(session: Session) -> SqliteResult<()> {
     let connection = open_connection()?;
+
+    connection.execute(
+        "insert into session (name
+            , sport
+            , sub_sport
+            , avg_power
+            , avg_heart_rate
+            , total_distance
+            , total_moving_time
+            , total_elapsed_time
+            , avg_cadence
+            , serial_number
+            , start_time)
+            values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)"
+        , [String::from("test file name")
+            , session.sport
+            , session.sub_sport
+            , session.avg_power.to_string()
+            , session.avg_heart_rate.to_string()
+            , session.total_distance.to_string()
+            , session.total_moving_time.to_string()
+            , session.total_elapsed_time.to_string()
+            , session.avg_cadence.to_string()
+            , session.serial_num.to_string()
+            , session.start_time.to_string()])?;
+
 
     return Ok(());
 }

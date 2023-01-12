@@ -21,18 +21,18 @@ enum FieldName {
 
 #[derive(Debug, Clone)]
 pub struct Session {
-    start_time: i64,
-    total_time: f64,
-    total_distance: f64,
-    avg_power: i64,
-    total_moving_time: f64,
-    avg_heart_rate: i64,
-    threshold_power: i64,
-    sport: String,
-    sub_sport: String,
-    avg_cadence: i64,
-    laps:  Vec<Lap>,
-    serial_num: i64
+    pub start_time: i64,
+    pub total_elapsed_time: f64,
+    pub total_distance: f64,
+    pub avg_power: i64,
+    pub total_moving_time: f64,
+    pub avg_heart_rate: i64,
+    pub threshold_power: i64,
+    pub sport: String,
+    pub sub_sport: String,
+    pub avg_cadence: i64,
+    pub laps:  Vec<Lap>,
+    pub serial_num: i64
 }
 
 #[derive(Debug, Clone)]
@@ -119,7 +119,7 @@ impl <'a>FromIterator<&'a FitDataField> for Session {
 
         return Session {
             start_time: Value::try_into(start_time_field.value().to_owned()).unwrap(),
-            total_time: Value::try_into(time_field.value().to_owned()).unwrap(),
+            total_elapsed_time: Value::try_into(time_field.value().to_owned()).unwrap(),
             total_distance: Value::try_into(distance_field.value().to_owned()).unwrap(),
             avg_power: Value::try_into(power_field.value().to_owned()).unwrap(),
             total_moving_time: Value::try_into(total_moving_time_field.value().to_owned()).unwrap(),
@@ -174,7 +174,7 @@ impl <'a>FromIterator<&'a FitDataField> for Lap {
     }
 }
 
-pub fn init() -> Result<()> {
+pub fn init() -> Result<Session> {
     println!("Parsing FIT files using Profile version: {}", fitparser::profile::VERSION);
     let mut fp = File::open("/home/salakris/Downloads/salakris-2023-01-08-l2-up-down-150--157110383.fit")
         .context("Unable to open the file")?;
@@ -185,9 +185,7 @@ pub fn init() -> Result<()> {
     let session_data: Session = get_session_data(&fit_data)
         .context("Failed getting Session data")?;
 
-    println!("{:#?}", session_data);
-
-    return Ok(());
+    return Ok(session_data);
 }
 
 fn get_session_data(data: &Vec<FitDataRecord>) -> Result<Session> {

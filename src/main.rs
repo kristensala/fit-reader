@@ -5,7 +5,10 @@ pub mod parser;
 
 fn main() -> Result<()> {
     db::init();
-    return parser::init();
+    let session = parser::init()?;
+
+//    db::insert_session(session);
+    return Ok(());
 }
 
 fn check_ricing() -> Result<()> {
