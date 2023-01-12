@@ -14,7 +14,6 @@ pub fn init() -> SqliteResult<()> {
     connection.execute(
         "create table if not exists session (
             id integer primary key,
-            name text not null,
             sport text not null,
             sub_sport text not null,
             avg_power integer null,
@@ -31,7 +30,7 @@ pub fn init() -> SqliteResult<()> {
 
     //todo; create lap table
     //todo: create lap record table
-    //todo: create account/user table -> current ftp and maybe something more
+    //todo: create account/user table -> current ftp and maybe something more power zones, etc
 
     return Ok(());
 }
@@ -40,8 +39,7 @@ pub fn insert_session(session: Session) -> SqliteResult<()> {
     let connection = open_connection()?;
 
     connection.execute(
-        "insert into session (name
-            , sport
+        "insert into session (sport
             , sub_sport
             , avg_power
             , avg_heart_rate
@@ -51,9 +49,8 @@ pub fn insert_session(session: Session) -> SqliteResult<()> {
             , avg_cadence
             , serial_number
             , start_time)
-            values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)"
-        , [String::from("test file name")
-            , session.sport
+            values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"
+        , [session.sport
             , session.sub_sport
             , session.avg_power.to_string()
             , session.avg_heart_rate.to_string()
@@ -64,7 +61,7 @@ pub fn insert_session(session: Session) -> SqliteResult<()> {
             , session.serial_num.to_string()
             , session.start_time.to_string()])?;
 
-
+    //TODO: insert laps here too
     return Ok(());
 }
 
