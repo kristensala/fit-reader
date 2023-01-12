@@ -19,7 +19,6 @@ enum FieldName {
     SerialNumber
 }
 
-// TODO: Session should have a file id also
 #[derive(Debug, Clone)]
 pub struct Session {
     start_time: i64,
