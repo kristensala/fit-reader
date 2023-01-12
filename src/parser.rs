@@ -15,12 +15,14 @@ enum FieldName {
     Sport,
     SubSport,
     ThresholdPower,
-    AvgHeartRate
+    AvgHeartRate,
+    SerialNumber
 }
 
+// TODO: Session should have a file id also
 #[derive(Debug, Clone)]
 pub struct Session {
-    start_time: f64,
+    start_time: i64,
     total_time: f64,
     total_distance: f64,
     avg_power: i64,
@@ -30,12 +32,13 @@ pub struct Session {
     sport: String,
     sub_sport: String,
     avg_cadence: i64,
-    laps:  Vec<Lap>
+    laps:  Vec<Lap>,
+    serial_num: i64
 }
 
 #[derive(Debug, Clone)]
 pub struct Lap {
-    start_time: f64,
+    start_time: i64,
     avg_power: i64,
     avg_heart_rate: i64,
     total_moving_time: f64,
@@ -54,7 +57,8 @@ impl fmt::Display for FieldName {
             FieldName::SubSport => write!(f, "sub_sport"),
             FieldName::AvgHeartRate => write!(f, "avg_heart_rate"),
             FieldName::ThresholdPower => write!(f, "threshold_power"),
-            FieldName::StartTime => write!(f, "start_time")
+            FieldName::StartTime => write!(f, "start_time"),
+            FieldName::SerialNumber => write!(f, "serial_number")
         }
     }
 }
@@ -125,6 +129,7 @@ impl <'a>FromIterator<&'a FitDataField> for Session {
             sport: sport_field.value().to_string(),
             sub_sport: sub_sport_field.value().to_string(),
             avg_cadence: Value::try_into(avg_candence_field.value().to_owned()).unwrap(),
+            serial_num: 0,
             laps: Vec::new()
         };
     }
@@ -170,7 +175,6 @@ impl <'a>FromIterator<&'a FitDataField> for Lap {
     }
 }
 
-// TODO: add a list of  file paths as a parameter. Add a limit max 10 at a time
 pub fn init() -> Result<()> {
     println!("Parsing FIT files using Profile version: {}", fitparser::profile::VERSION);
     let mut fp = File::open("/home/salakris/Downloads/salakris-2023-01-08-l2-up-down-150--157110383.fit")
@@ -198,6 +202,7 @@ fn get_session_data(data: &Vec<FitDataRecord>) -> Result<Session> {
         .collect();
 
     let mut parsed_data = Session::from_iter(data_fields.into_iter());
+    parsed_data.serial_num = get_file_serial_num(data).unwrap();
     parsed_data.laps = get_laps_data(data).unwrap();
 
     return Ok(parsed_data);
@@ -220,3 +225,28 @@ fn get_laps_data(data: &Vec<FitDataRecord>) -> Result<Vec<Lap>> {
 fn get_lap_record_data() -> Result<()> {
     return Ok(());
 }
+
+fn get_file_serial_num(data: &Vec<FitDataRecord>) -> Result<i64> {
+    let file_data: Vec<&FitDataRecord> = data.into_iter()
+        .filter(|x| x.kind() == MesgNum::FileId)
+        .collect();
+
+    let serial_num_value: Value = file_data.iter()
+        .map(|x| {
+            return x.fields()
+                .into_iter()
+                .find(|x| x.name() == FieldName::SerialNumber.to_string())
+                .unwrap()
+                .value()
+                .to_owned();
+        })
+        .collect::<Vec<Value>>()
+        .first()
+        .unwrap()
+        .to_owned();
+
+    let serial_num: i64 = Value::try_into(serial_num_value.to_owned()).unwrap();
+
+    return Ok(serial_num);
+}
+
