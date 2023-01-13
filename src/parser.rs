@@ -216,7 +216,6 @@ impl <'a>FromIterator<&'a FitDataField> for Record {
             .find(|&&x| x.name() == FieldName::HeartRate.to_string())
             .expect("If the file is not corrupt, heart rate field should exist");
 
-
         return Record {
             timestamp: Value::try_into(timestamp_field.value().to_owned()).unwrap(),
             distance: Value::try_into(distance_field.value().to_owned()).unwrap(),

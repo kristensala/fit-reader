@@ -1,14 +1,16 @@
-use rusqlite::{Connection, Result as SqliteResult};
+use anyhow::Result;
+use anyhow::anyhow;
+use rusqlite::Connection;
 
 use crate::parser::Session;
 
 //TODO: read a path from ~/.fit-reader file.
 //if .fit-reader does not exist or db path variable is missing show and error 
-fn open_connection() -> SqliteResult<Connection> {
+fn open_connection() -> Result<Connection> {
     return Ok(Connection::open("test.db")?);
 }
 
-pub fn init() -> SqliteResult<()> {
+pub fn init() -> Result<()> {
     let connection = open_connection()?;
 
     connection.execute(
@@ -28,17 +30,26 @@ pub fn init() -> SqliteResult<()> {
         []
     )?;
 
-    //todo; create lap table
-    //todo: create lap record table
-    //todo: create account/user table -> current ftp and maybe something more power zones, etc
+    connection.execute(
+        "create table if not exists lap (
+            id integer primary key,
+            avg_heart_rate integer null,
+            avg_power integer null,
+            start_time text not null,
+            distance real null,
+            total_moving_time real null,
+            session_id integer not null,
+            foreign key (session_id)
+                references session (id)
+        )", [])?;
 
     return Ok(());
 }
 
-pub fn insert_session(session: Session) -> SqliteResult<()> {
+pub fn insert_session(session: Session) -> Result<i64> {
     let connection = open_connection()?;
 
-    connection.execute(
+    let insert_session = connection.execute(
         "insert into session (sport
             , sub_sport
             , avg_power
@@ -59,25 +70,32 @@ pub fn insert_session(session: Session) -> SqliteResult<()> {
             , session.total_elapsed_time.to_string()
             , session.avg_cadence.to_string()
             , session.serial_num.to_string()
-            , session.start_time.to_string()])?;
+            , session.start_time.to_string()]);
 
-    //TODO: insert laps here too
-    return Ok(());
+    if insert_session.is_err() {
+        return Err(anyhow!("Could not insert session!"));
+    }
+
+    let session_id = connection.last_insert_rowid();
+
+    let laps = session.laps;
+    for lap in laps {
+        connection.execute(
+            "insert into lap (
+                  avg_heart_rate
+                , avg_power
+                , start_time
+                , distance
+                , total_moving_time
+                , session_id
+            ) values (?1, ?2, ?3, ?4, ?5, ?6)"
+            , [lap.avg_heart_rate.to_string()
+                , lap.avg_power.to_string()
+                , lap.start_time.to_string()
+                , lap.total_distance.to_string()
+                , lap.total_moving_time.to_string()
+                , session_id.to_string()])?;
+    }
+
+    return Ok(session_id);
 }
-
-pub fn insert_session_in_bulk(sessons: Vec<&Session>) -> SqliteResult<()> {
-    return Ok(());
-}
-
-pub fn get_session_by_id(id: i32) -> SqliteResult<()> { // should return session
-    return Ok(()); 
-}
-
-pub fn get_sessions_by_date_range(start: f64, end: f64) -> SqliteResult<()> {
-    return Ok(());
-}
-
-pub fn get_all_sessions() -> SqliteResult<()>{
-    return Ok(());
-}
-
