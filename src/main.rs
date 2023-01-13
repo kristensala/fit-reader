@@ -1,12 +1,20 @@
+use std::env;
+
 use anyhow::Result;
 
 mod db;
 mod parser;
 
-
 //IDEA 1: every time I run the program, check if new workouts are created
 //IDEA 2: create a specific command to pull workouts. Makes load up time faster
 fn main() -> Result<()> {
+    let args: Vec<String> = env::args().collect();
+
+    if args[1] == "i" {
+        // todo: import
+        println!("{}", "import");
+        return Ok(());
+    }
 
     let trainer_road_path = "~/Dropbox/Apps/TrainerRoad/";
     // check config if base file bath is set and db pash is set
@@ -20,9 +28,9 @@ fn main() -> Result<()> {
 //    let session = parser::init()?;
 //    db::insert_session(session);
 
-    let test = db::get_all_sessions()?;
+    let sessions = db::get_all_sessions()?;
 
-    println!("{:?}", test);
+    println!("{:?}", sessions);
     return Ok(());
 }
 

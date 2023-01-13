@@ -1,5 +1,6 @@
 use anyhow::Result;
 use anyhow::anyhow;
+use anyhow::bail;
 use rusqlite::Connection;
 use rusqlite::OptionalExtension;
 
@@ -9,7 +10,11 @@ use crate::parser::Lap;
 //TODO: read a path from ~/.fit-reader file.
 //if .fit-reader does not exist or db path variable is missing show and error 
 fn open_connection() -> Result<Connection> {
-    return Ok(Connection::open("test.db")?);
+    let conn = match Connection::open("test.db") {
+        Ok(connection) => connection,
+        Err(e) => bail!(e),
+    };
+    return Ok(conn);
 }
 
 pub fn init() -> Result<()> {
@@ -46,7 +51,7 @@ pub fn init() -> Result<()> {
                 references session (id)
         )", [])?;
 
-    connection.execute( // check if correct fields
+    connection.execute(
         "create table if not exists record (
             id integer primary key,
             heart_rate integer null,
@@ -62,6 +67,10 @@ pub fn init() -> Result<()> {
 }
 
 pub fn insert_session(session: Session) -> Result<i64> {
+    if session_exists(session.clone())? {
+        return Err(anyhow!("Session already exists during this time period!"));
+    }
+
     let connection = open_connection()?;
 
     let insert_session = connection.execute(
@@ -188,8 +197,7 @@ pub fn get_all_sessions() -> Result<Vec<Session>> {
         .map(|x| x.unwrap())
         .collect();
 
-    println!("{:?}", sessions);
-    return Ok(Vec::new());
+    return Ok(sessions);
 }
 
 fn get_laps_by_session_id(session_id: String) -> Result<Vec<Lap>> {
@@ -226,4 +234,23 @@ fn get_laps_by_session_id(session_id: String) -> Result<Vec<Lap>> {
 pub fn get_sessions_by_year(year: i64) -> Result<Vec<Session>> {
     let result: Vec<Session> = Vec::new();
     return Ok(result);
+}
+
+fn session_exists(session: Session) -> Result<bool> {
+    let conn = open_connection()?;
+    let start_time = session.start_time;
+    let end_time = session.total_elapsed_time.to_string().parse::<i64>().unwrap() + start_time;
+
+    let result = conn.execute(
+        "select s.id
+              , s.start_time + s.total_elapsed_time as end_time
+        from session s
+        where (?1 between s.start_time and end_time or ?2 between s.start_time and end_time)
+            or (?1 <= s.start_time && ?2 >= endtime)", [start_time, end_time])?;
+
+    if result > 0 {
+        return Ok(true);
+    }
+
+    return Ok(false);
 }
