@@ -25,6 +25,7 @@ enum FieldName {
 
 #[derive(Debug, Clone)]
 pub struct Session {
+    pub id: Option<i16>,
     pub start_time: i64,
     pub total_elapsed_time: f64,
     pub total_distance: f64,
@@ -42,6 +43,7 @@ pub struct Session {
 
 #[derive(Debug, Clone)]
 pub struct Lap {
+    pub id: Option<i16>,
     pub start_time: i64,
     pub avg_power: i64,
     pub avg_heart_rate: i64,
@@ -51,6 +53,7 @@ pub struct Lap {
 
 #[derive(Debug, Clone)]
 pub struct Record {
+    pub id: Option<i16>,
     pub timestamp: i64,
     pub heart_rate: i64,
     pub power: i64,
@@ -134,6 +137,7 @@ impl <'a>FromIterator<&'a FitDataField> for Session {
             .unwrap();
 
         return Session {
+            id: None,
             start_time: Value::try_into(start_time_field.value().to_owned()).unwrap(),
             total_elapsed_time: Value::try_into(time_field.value().to_owned()).unwrap(),
             total_distance: Value::try_into(distance_field.value().to_owned()).unwrap(),
@@ -182,6 +186,7 @@ impl <'a>FromIterator<&'a FitDataField> for Lap {
             .unwrap();
 
         return Lap {
+            id: None,
             start_time: Value::try_into(start_time_field.value().to_owned()).unwrap(),
             total_distance: Value::try_into(distance_field.value().to_owned()).unwrap(),
             avg_power: Value::try_into(power_field.value().to_owned()).unwrap(),
@@ -191,6 +196,9 @@ impl <'a>FromIterator<&'a FitDataField> for Lap {
     }
 }
 
+// too much data under records to save into db;
+// row for each second, way too much
+// maybe take after every 10sec
 impl <'a>FromIterator<&'a FitDataField> for Record {
     fn from_iter<T: IntoIterator<Item = &'a FitDataField>>(iter: T) -> Record {
         let fields = iter.into_iter()
@@ -217,6 +225,7 @@ impl <'a>FromIterator<&'a FitDataField> for Record {
             .expect("If the file is not corrupt, heart rate field should exist");
 
         return Record {
+            id: None,
             timestamp: Value::try_into(timestamp_field.value().to_owned()).unwrap(),
             distance: Value::try_into(distance_field.value().to_owned()).unwrap(),
             power: Value::try_into(power_field.value().to_owned()).unwrap(),
@@ -235,8 +244,6 @@ pub fn init() -> Result<Session> {
 
     let session_data: Session = get_session_data(&fit_data)
         .context("Failed getting Session data")?;
-
-    println!("{:#?}", session_data);
 
     return Ok(session_data);
 }
@@ -278,7 +285,10 @@ fn get_record_data(data: &Vec<FitDataRecord>) -> Result<Vec<Record>> {
         .filter(|x| x.kind() == MesgNum::Record)
         .collect();
 
+    let n = 60; // data on every minute
     let records = record_data.iter()
+        .skip(n - 1)
+        .step_by(n)
         .map(|&x| {
             let record_fields: Vec<&FitDataField> = x.fields().into_iter().collect();
             return Record::from_iter(record_fields.into_iter());

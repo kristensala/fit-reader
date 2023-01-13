@@ -1,8 +1,10 @@
 use anyhow::Result;
 use anyhow::anyhow;
 use rusqlite::Connection;
+use rusqlite::OptionalExtension;
 
 use crate::parser::Session;
+use crate::parser::Lap;
 
 //TODO: read a path from ~/.fit-reader file.
 //if .fit-reader does not exist or db path variable is missing show and error 
@@ -25,7 +27,8 @@ pub fn init() -> Result<()> {
             total_elapsed_time real not null,
             avg_cadence integer null,
             serial_number integer null,
-            start_time text not null
+            start_time text not null,
+            threshold_power integer null
         )",
         []
     )?;
@@ -38,6 +41,18 @@ pub fn init() -> Result<()> {
             start_time text not null,
             distance real null,
             total_moving_time real null,
+            session_id integer not null,
+            foreign key (session_id)
+                references session (id)
+        )", [])?;
+
+    connection.execute( // check if correct fields
+        "create table if not exists record (
+            id integer primary key,
+            heart_rate integer null,
+            power integer null,
+            timestamp text not null,
+            distance real null,
             session_id integer not null,
             foreign key (session_id)
                 references session (id)
@@ -59,8 +74,9 @@ pub fn insert_session(session: Session) -> Result<i64> {
             , total_elapsed_time
             , avg_cadence
             , serial_number
-            , start_time)
-            values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"
+            , start_time
+            , threshold_power)
+            values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)"
         , [session.sport
             , session.sub_sport
             , session.avg_power.to_string()
@@ -70,7 +86,8 @@ pub fn insert_session(session: Session) -> Result<i64> {
             , session.total_elapsed_time.to_string()
             , session.avg_cadence.to_string()
             , session.serial_num.to_string()
-            , session.start_time.to_string()]);
+            , session.start_time.to_string()
+            , session.threshold_power.to_string()]);
 
     if insert_session.is_err() {
         return Err(anyhow!("Could not insert session!"));
@@ -97,5 +114,116 @@ pub fn insert_session(session: Session) -> Result<i64> {
                 , session_id.to_string()])?;
     }
 
+    let records = session.records;
+    for record in records {
+        connection.execute(
+            "insert into record (
+                  heart_rate
+                , power
+                , timestamp
+                , distance
+                , session_id
+            ) values (?1, ?2, ?3, ?4, ?5)"
+            , [record.heart_rate.to_string()
+                , record.power.to_string()
+                , record.timestamp.to_string()
+                , record.distance.to_string()
+                , session_id.to_string()])?;
+    }
+
     return Ok(session_id);
+}
+
+pub fn get_all_sessions() -> Result<Vec<Session>> {
+    let conn = open_connection()?;
+
+    let mut query = conn.prepare(
+        "select id 
+            , sport
+            , sub_sport
+            , avg_power
+            , avg_heart_rate
+            , total_distance
+            , total_moving_time
+            , total_elapsed_time
+            , avg_cadence
+            , serial_number
+            , start_time
+            , threshold_power
+        from session")?;
+
+    let query_result = query.query_map([], |row| {
+        let session_id: i16 = row.get(0)?;
+        let sport_col: String = row.get(1)?;
+        let sub_sport_col: String = row.get(2)?;
+        let avg_power_col: i64 = row.get(3)?;
+        let avg_heart_rate_col: i64 = row.get(4)?;
+        let total_distance_col: f64 = row.get(5)?;
+        let total_moving_time_col: f64 = row.get(6)?;
+        let total_elapsed_time_col: f64 = row.get(7)?;
+        let avg_cadence_col: i64 = row.get(8)?;
+        let serial_num_col: i64 = row.get(9)?;
+        let start_time_col: String = row.get(10)?;
+        let threshold_power_col: i64 = row.get(11)?;
+
+        Ok(Session {
+            id: Some(session_id),
+            sport: sport_col,
+            sub_sport: sub_sport_col,
+            avg_power: avg_power_col,
+            avg_heart_rate: avg_heart_rate_col,
+            total_distance: total_distance_col,
+            total_moving_time: total_moving_time_col,
+            total_elapsed_time: total_elapsed_time_col,
+            avg_cadence: avg_cadence_col,
+            serial_num: serial_num_col,
+            start_time: start_time_col.parse::<i64>().unwrap(),
+            threshold_power: threshold_power_col,
+            laps: Vec::new(),
+            records: Vec::new()
+        })
+    })?;
+
+    let sessions: Vec<Session> = query_result.into_iter()
+        .map(|x| x.unwrap())
+        .collect();
+
+    println!("{:?}", sessions);
+    return Ok(Vec::new());
+}
+
+fn get_laps_by_session_id(session_id: String) -> Result<Vec<Lap>> {
+    let conn = open_connection()?;
+
+    let mut query = conn.prepare(
+        "select id 
+            , avg_heart_rate
+            , avg_power
+            , start_time
+            , distance
+            , total_moving_time
+        from lap
+        where session_id = ?")?;
+
+    let query_result = query.query_map([session_id], |row| {
+        Ok(Lap {
+            id: row.get(0).optional()?,
+            avg_heart_rate: row.get(1)?,
+            avg_power: row.get(2)?,
+            start_time: row.get(3)?,
+            total_distance: row.get(4)?,
+            total_moving_time: row.get(5)?
+        })
+    })?;
+
+    let laps: Vec<Lap> = query_result.into_iter()
+        .map(|x| x.unwrap())
+        .collect();
+
+    return Ok(laps);
+}
+
+pub fn get_sessions_by_year(year: i64) -> Result<Vec<Session>> {
+    let result: Vec<Session> = Vec::new();
+    return Ok(result);
 }
