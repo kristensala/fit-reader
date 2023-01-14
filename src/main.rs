@@ -1,6 +1,5 @@
 use std::env;
 use std::fs;
-
 use anyhow::Result;
 
 mod db;
@@ -19,16 +18,21 @@ fn main() -> Result<()> {
         for file in fs::read_dir(trainer_road_path).unwrap() {
             let path = file.unwrap().path().display().to_string();
             println!("{}", path);
-            if is_fit_file(&path) {
-                let session = parser::init(&path)?;
-                let inserted = db::insert_session(session);
-                if inserted.is_ok() {
-                    fs::remove_file(path)?;
-                } else {
-                    let error = inserted.err();
-                    errors.push(format!("Failed to import session {}; Error: {}", &path, error.unwrap()));
-                }
-                
+
+            let session = parser::init(&path);
+            if !session.is_ok() {
+                let err = session.err();
+                errors.push(format!("Error: {}", err.unwrap()));
+                continue;
+            }
+
+            let session_insert = db::insert_session(session.unwrap());
+
+            if session_insert.is_ok() {
+                fs::remove_file(path)?;
+            } else {
+                let error = session_insert.err();
+                errors.push(format!("Failed to import session {}; Error: {}", &path, error.unwrap()));
             }
         }
 
@@ -41,12 +45,4 @@ fn main() -> Result<()> {
 
     println!("{:?}", sessions);
     return Ok(());
-}
-
-fn is_fit_file(file: &String) -> bool {
-    if file.ends_with(".fit") {
-        return true;
-    }
-
-    return false;
 }

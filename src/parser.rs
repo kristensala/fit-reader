@@ -2,7 +2,7 @@ use fitparser::{self, FitDataRecord, FitDataField, Value};
 use fitparser::profile::MesgNum;
 use core::fmt;
 use std::fs::File;
-use anyhow::{Result, Context};
+use anyhow::{Result, Context, bail};
 
 #[derive(Debug)]
 enum FieldName {
@@ -233,6 +233,10 @@ impl <'a>FromIterator<&'a FitDataField> for Record {
 
 pub fn init(path: &String) -> Result<Session> {
     println!("Parsing FIT files using Profile version: {}", fitparser::profile::VERSION);
+    if !is_fit_file(path) {
+        bail!("Not a fit file");
+    }
+
     let mut fp = File::open(path)
         .context("Unable to open the file")?;
 
@@ -255,8 +259,7 @@ fn get_session_data(data: &Vec<FitDataRecord>) -> Result<Session> {
         .into_iter()
         .collect();
 
-    let mut parsed_data = Session::from_iter(data_fields.into_iter());
-    parsed_data.serial_num = get_file_serial_num(data).unwrap();
+    let mut parsed_data = Session::from_iter(data_fields.into_iter()); parsed_data.serial_num = get_file_serial_num(data).unwrap();
     parsed_data.laps = get_laps_data(data).unwrap();
     parsed_data.records = get_record_data(data).unwrap();
 
@@ -318,3 +321,10 @@ fn get_file_serial_num(data: &Vec<FitDataRecord>) -> Result<i64> {
     return Ok(serial_num);
 }
 
+fn is_fit_file(file: &String) -> bool {
+    if file.ends_with(".fit") {
+        return true;
+    }
+
+    return false;
+}
