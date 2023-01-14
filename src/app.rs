@@ -42,7 +42,7 @@ pub fn run_app() -> Result<()> {
 
 fn draw<B: Backend>(terminal: &mut Terminal<B>) -> Result<()> {
     loop {
-        terminal.draw(|f| ui::main_layout(f))?;
+        terminal.draw(|f| ui::draw_dashboard(f))?;
 
         if let Event::Key(key) = event::read()? {
             if let KeyCode::Char('q') = key.code {
