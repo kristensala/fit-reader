@@ -196,9 +196,6 @@ impl <'a>FromIterator<&'a FitDataField> for Lap {
     }
 }
 
-// too much data under records to save into db;
-// row for each second, way too much
-// maybe take after every 10sec
 impl <'a>FromIterator<&'a FitDataField> for Record {
     fn from_iter<T: IntoIterator<Item = &'a FitDataField>>(iter: T) -> Record {
         let fields = iter.into_iter()
@@ -234,9 +231,9 @@ impl <'a>FromIterator<&'a FitDataField> for Record {
     }
 }
 
-pub fn init() -> Result<Session> {
+pub fn init(path: &String) -> Result<Session> {
     println!("Parsing FIT files using Profile version: {}", fitparser::profile::VERSION);
-    let mut fp = File::open("/home/salakris/Downloads/salakris-2023-01-08-l2-up-down-150--157110383.fit")
+    let mut fp = File::open(path)
         .context("Unable to open the file")?;
 
     let fit_data = fitparser::from_reader(&mut fp)

@@ -241,14 +241,17 @@ fn session_exists(session: Session) -> Result<bool> {
     let start_time = session.start_time;
     let end_time = session.total_elapsed_time.to_string().parse::<i64>().unwrap() + start_time;
 
-    let result = conn.execute(
+    let mut query = conn.prepare(
         "select s.id
               , s.start_time + s.total_elapsed_time as end_time
         from session s
-        where (?1 between s.start_time and end_time or ?2 between s.start_time and end_time)
-            or (?1 <= s.start_time && ?2 >= endtime)", [start_time, end_time])?;
+        where (?1 between s.start_time and (s.start_time + s.total_elapsed_time) or ?2 between s.start_time and (s.start_time + s.total_elapsed_time))
+            or (?1 <= s.start_time and ?2 >= (s.start_time + s.total_elapsed_time))")?;
 
-    if result > 0 {
+    let mut rows = query.query([start_time, end_time])?;
+    let value = rows.next()?;
+
+    if value.is_some() {
         return Ok(true);
     }
 

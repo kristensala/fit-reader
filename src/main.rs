@@ -1,60 +1,52 @@
 use std::env;
+use std::fs;
 
 use anyhow::Result;
 
 mod db;
 mod parser;
 
-//IDEA 1: every time I run the program, check if new workouts are created
-//IDEA 2: create a specific command to pull workouts. Makes load up time faster
 fn main() -> Result<()> {
+    let mut errors: Vec<String> = Vec::new();
+    let trainer_road_path = "/home/salakris/Dropbox/Apps/TrainerRoad/";
     let args: Vec<String> = env::args().collect();
 
-    if args[1] == "i" {
-        // todo: import
-        println!("{}", "import");
+    db::init()?;
+
+    if args.len() > 1 && args[1] == "i" {
+        println!("{}", "Start import");
+
+        for file in fs::read_dir(trainer_road_path).unwrap() {
+            let path = file.unwrap().path().display().to_string();
+            println!("{}", path);
+            if is_fit_file(&path) {
+                let session = parser::init(&path)?;
+                let inserted = db::insert_session(session);
+                if inserted.is_ok() {
+                    fs::remove_file(path)?;
+                } else {
+                    let error = inserted.err();
+                    errors.push(format!("Failed to import session {}; Error: {}", &path, error.unwrap()));
+                }
+                
+            }
+        }
+
+        println!("{:#?}", errors);
+
         return Ok(());
     }
-
-    let trainer_road_path = "~/Dropbox/Apps/TrainerRoad/";
-    // check config if base file bath is set and db pash is set
     
-    // pull workouts
-
-    // iterate over the files and parse them and insert to database
-    
-    // archive workouts -> move the files to archive folder
-    db::init();
-//    let session = parser::init()?;
-//    db::insert_session(session);
-
     let sessions = db::get_all_sessions()?;
 
     println!("{:?}", sessions);
     return Ok(());
 }
 
-// return list of file paths
-fn pull_workouts(dirs: Vec<String>) -> Result<()> {
-    // use walkdir crate
-    return Ok(()); 
-}
-
-// probably delete the file if inserted successfully
-fn archive_workouts() -> Result<()> {
-    return Ok(());
-}
-
-fn is_fit_file(file: String) -> bool {
+fn is_fit_file(file: &String) -> bool {
     if file.ends_with(".fit") {
         return true;
     }
 
     return false;
-}
-
-fn check_ricing() -> Result<()> {
-    // ~/.fitreaderrc -> this file needs to exist and certain variables need to be declared in it
-    // (folder to watch and the db file location)
-    return Ok(());
 }
