@@ -2,6 +2,8 @@ use std::env;
 use std::fs;
 use anyhow::Result;
 
+mod app;
+mod ui;
 mod db;
 mod parser;
 
@@ -10,9 +12,9 @@ fn main() -> Result<()> {
     let trainer_road_path = "/home/salakris/Dropbox/Apps/TrainerRoad/";
     let args: Vec<String> = env::args().collect();
 
-    db::init()?;
+    if args.len() > 1 && args[1] == "import" {
+        db::init()?;
 
-    if args.len() > 1 && args[1] == "i" {
         println!("{}", "Start import");
 
         for file in fs::read_dir(trainer_road_path).unwrap() {
@@ -41,8 +43,10 @@ fn main() -> Result<()> {
         return Ok(());
     }
     
-    let sessions = db::get_all_sessions()?;
+    //let sessions = db::get_all_sessions()?;
+    //println!("{:?}", sessions);
 
-    println!("{:?}", sessions);
+    app::run_app()?;
     return Ok(());
 }
+
