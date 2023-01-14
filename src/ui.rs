@@ -6,7 +6,7 @@ use tui::{
     Frame,
 };
 
-pub fn ui<B: Backend>(f: &mut Frame<B>) {
+pub fn main_layout<B: Backend>(f: &mut Frame<B>) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -23,4 +23,12 @@ pub fn ui<B: Backend>(f: &mut Frame<B>) {
     f.render_widget(block, chunks[0]);
     let block = Block::default().title("Block 2").borders(Borders::ALL);
     f.render_widget(block, chunks[2]);
+}
+
+pub fn draw_dashboard<B: Backend>(f: &mut Frame<B>) {
+    
+}
+
+pub fn draw_sessions<B: Backend>(f: &mut Frame<B>) {
+    
 }
