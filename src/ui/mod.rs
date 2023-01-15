@@ -116,33 +116,7 @@ fn draw_last_workout_section<B: Backend>(f: &mut Frame<B>, layout: Rect) {
 }
 
 fn draw_session_chart<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
-    // move this to lib.rs
-    let records = app.latest_session.to_owned().unwrap().records;
-   
-    let mut power: [(f64, f64); 200] = [(0.0, 0.0); 200];
-    let mut heart_rate: [(f64, f64); 200] = [(0.0, 0.0); 200];
-
-    for (idx, item) in records.iter().enumerate() {
-        power[idx] = (60.0 * idx as f64, item.power as f64);  
-        heart_rate[idx] = (60.0 * idx as f64, item.heart_rate as f64);  
-    }
-
-    // get bounds
-    let min_value_y = records.iter()
-        .map(|x| x.heart_rate)
-        .collect::<Vec<i64>>()
-        .iter()
-        .min()
-        .unwrap()
-        .to_owned() as f64;
-
-    let max_value_y = records.iter()
-        .map(|x| x.power)
-        .collect::<Vec<i64>>()
-        .iter()
-        .max()
-        .unwrap()
-        .to_owned() as f64;
+    let dataset = lib::build_session_records_dataset(app);   
 
     let datasets = vec![
         Dataset::default()
@@ -150,13 +124,13 @@ fn draw_session_chart<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
             .marker(symbols::Marker::Braille)
             .graph_type(GraphType::Line)
             .style(Style::default().fg(Color::Cyan))
-            .data(&power),
+            .data(&dataset.power),
         Dataset::default()
             .name("heart rate")
             .marker(symbols::Marker::Braille)
             .graph_type(GraphType::Line)
             .style(Style::default().fg(Color::Magenta))
-            .data(&heart_rate),
+            .data(&dataset.heart_rate),
     ];
     let chart = Chart::new(datasets)
         .block(Block::default().title("Chart"))
@@ -168,8 +142,8 @@ fn draw_session_chart<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
         .y_axis(Axis::default()
             .title(Span::styled("power/heart rate", Style::default().fg(Color::Red)))
             .style(Style::default().fg(Color::White))
-            .bounds([min_value_y, max_value_y])
-            .labels([min_value_y.to_string(), max_value_y.to_string()].iter().cloned().map(Span::from).collect()));
+            .bounds([dataset.min_y, dataset.max_y])
+            .labels([dataset.min_y.to_string(), dataset.max_y.to_string()].iter().cloned().map(Span::from).collect()));
 
     f.render_widget(chart, layout);
 }
