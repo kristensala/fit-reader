@@ -56,10 +56,8 @@ pub fn run_app() -> Result<()> {
 fn draw<B: Backend>(terminal: &mut Terminal<B>) -> Result<()> {
     let mut app = App::default();
     
-    let sessions = db::get_all_sessions()?;
-    let first = sessions.get(0).unwrap();
-
-    app.latest_session = Some(first.to_owned());
+    let session = db::get_latest_session()?;
+    app.latest_session = Some(session.to_owned());
 
     loop {
         terminal.draw(|f| ui::draw_dashboard(f, &app))?;

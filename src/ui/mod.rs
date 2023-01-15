@@ -47,8 +47,8 @@ pub fn draw_dashboard<B: Backend>(f: &mut Frame<B>, app: &App) {
         .constraints([
             Constraint::Percentage(10),
             Constraint::Percentage(20),
-            Constraint::Percentage(20),
-            Constraint::Percentage(50)
+            Constraint::Percentage(60),
+            Constraint::Percentage(10)
         ].as_ref())
         .margin(1)
         .split(f.size());
@@ -131,14 +131,20 @@ fn draw_session_chart<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
             .graph_type(GraphType::Line)
             .style(Style::default().fg(Color::Magenta))
             .data(&dataset.heart_rate),
+        Dataset::default()
+            .name("Threshold power")
+            .marker(symbols::Marker::Braille)
+            .graph_type(GraphType::Line)
+            .style(Style::default().fg(Color::White))
+            .data(&dataset.threshold_power),
     ];
     let chart = Chart::new(datasets)
         .block(Block::default().title("Chart"))
         .x_axis(Axis::default()
             .title(Span::styled("Time", Style::default().fg(Color::Red)))
             .style(Style::default().fg(Color::White))
-            .bounds([0.0, 9000.0])
-            .labels(["0.0", "9000.0"].iter().cloned().map(Span::from).collect()))
+            .bounds([0.0, dataset.max_x])
+            .labels(["0.0".to_string(), dataset.max_x.to_string()].iter().cloned().map(Span::from).collect()))
         .y_axis(Axis::default()
             .title(Span::styled("power/heart rate", Style::default().fg(Color::Red)))
             .style(Style::default().fg(Color::White))

@@ -2,7 +2,6 @@ use anyhow::Result;
 use anyhow::anyhow;
 use anyhow::bail;
 use rusqlite::Connection;
-use rusqlite::OptionalExtension;
 
 use crate::parser::Record;
 use crate::parser::Session;
@@ -277,9 +276,64 @@ fn get_records_by_session_id(session_id: String) -> Result<Vec<Record>> {
     return Ok(records);
 }
 
-pub fn get_sessions_by_year(year: i64) -> Result<Vec<Session>> {
-    let result: Vec<Session> = Vec::new();
-    return Ok(result);
+pub fn get_latest_session() -> Result<Session> {
+    let conn = open_connection()?;
+
+    let mut query = conn.prepare(
+        "select id 
+            , sport
+            , sub_sport
+            , avg_power
+            , avg_heart_rate
+            , total_distance
+            , total_moving_time
+            , total_elapsed_time
+            , avg_cadence
+            , serial_number
+            , start_time
+            , threshold_power
+        from session order by start_time")?;
+
+    let query_result = query.query_map([], |row| {
+        let session_id: i16 = row.get(0)?;
+        let sport_col: String = row.get(1)?;
+        let sub_sport_col: String = row.get(2)?;
+        let avg_power_col: i64 = row.get(3)?;
+        let avg_heart_rate_col: i64 = row.get(4)?;
+        let total_distance_col: f64 = row.get(5)?;
+        let total_moving_time_col: f64 = row.get(6)?;
+        let total_elapsed_time_col: f64 = row.get(7)?;
+        let avg_cadence_col: i64 = row.get(8)?;
+        let serial_num_col: i64 = row.get(9)?;
+        let start_time_col: String = row.get(10)?;
+        let threshold_power_col: i64 = row.get(11)?;
+
+        let session_laps = get_laps_by_session_id(session_id.to_string()).unwrap();
+        let session_records = get_records_by_session_id(session_id.to_string()).unwrap();
+
+        Ok(Session {
+            id: Some(session_id),
+            sport: sport_col,
+            sub_sport: sub_sport_col,
+            avg_power: avg_power_col,
+            avg_heart_rate: avg_heart_rate_col,
+            total_distance: total_distance_col,
+            total_moving_time: total_moving_time_col,
+            total_elapsed_time: total_elapsed_time_col,
+            avg_cadence: avg_cadence_col,
+            serial_num: serial_num_col,
+            start_time: start_time_col.parse::<i64>().unwrap(),
+            threshold_power: threshold_power_col,
+            laps: session_laps,
+            records: session_records
+        })
+    })?;
+
+    let sessions: Vec<Session> = query_result.into_iter()
+        .map(|x| x.unwrap())
+        .collect();
+
+    return Ok(sessions.first().unwrap().to_owned());
 }
 
 fn session_exists(session: Session) -> Result<bool> {
