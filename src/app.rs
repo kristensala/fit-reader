@@ -1,4 +1,4 @@
-use crate::ui;
+use crate::{ui, db, parser::Session};
 
 use std::io::stdout;
 
@@ -12,6 +12,18 @@ use tui::{
     backend::{Backend, CrosstermBackend},
     Terminal,
 };
+
+pub struct App {
+    pub latest_session: Option<Session>,
+}
+
+impl Default for App {
+    fn default() -> Self {
+        App {
+            latest_session: None,
+        }
+    }
+}
 
 pub fn run_app() -> Result<()> {
     // setup terminal
@@ -40,9 +52,17 @@ pub fn run_app() -> Result<()> {
     Ok(())
 }
 
+/// needs a refactor, just testing right now
 fn draw<B: Backend>(terminal: &mut Terminal<B>) -> Result<()> {
+    let mut app = App::default();
+    
+    let sessions = db::get_all_sessions()?;
+    let first = sessions.get(0).unwrap();
+
+    app.latest_session = Some(first.to_owned());
+
     loop {
-        terminal.draw(|f| ui::draw_dashboard(f))?;
+        terminal.draw(|f| ui::draw_dashboard(f, &app))?;
 
         if let Event::Key(key) = event::read()? {
             if let KeyCode::Char('q') = key.code {

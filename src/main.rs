@@ -44,7 +44,7 @@ fn main() -> Result<()> {
     }
     
     //let sessions = db::get_all_sessions()?;
-    //println!("{:?}", sessions);
+    //println!("{:#?}", sessions);
 
     app::run_app()?;
     return Ok(());

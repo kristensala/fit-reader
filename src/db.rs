@@ -4,6 +4,7 @@ use anyhow::bail;
 use rusqlite::Connection;
 use rusqlite::OptionalExtension;
 
+use crate::parser::Record;
 use crate::parser::Session;
 use crate::parser::Lap;
 
@@ -175,6 +176,9 @@ pub fn get_all_sessions() -> Result<Vec<Session>> {
         let start_time_col: String = row.get(10)?;
         let threshold_power_col: i64 = row.get(11)?;
 
+        let session_laps = get_laps_by_session_id(session_id.to_string()).unwrap();
+        let session_records = get_records_by_session_id(session_id.to_string()).unwrap();
+
         Ok(Session {
             id: Some(session_id),
             sport: sport_col,
@@ -188,8 +192,8 @@ pub fn get_all_sessions() -> Result<Vec<Session>> {
             serial_num: serial_num_col,
             start_time: start_time_col.parse::<i64>().unwrap(),
             threshold_power: threshold_power_col,
-            laps: Vec::new(),
-            records: Vec::new()
+            laps: session_laps,
+            records: session_records
         })
     })?;
 
@@ -214,13 +218,20 @@ fn get_laps_by_session_id(session_id: String) -> Result<Vec<Lap>> {
         where session_id = ?")?;
 
     let query_result = query.query_map([session_id], |row| {
+        let lap_id: i16 = row.get(0)?;
+        let avg_heart_rate_col: i64 = row.get(1)?;
+        let avg_power_col: i64 = row.get(2)?;
+        let start_time_col:String = row.get(3)?;
+        let distance_col: f64 = row.get(4)?;
+        let total_moving_time_col: f64 = row.get(5)?;
+
         Ok(Lap {
-            id: row.get(0).optional()?,
-            avg_heart_rate: row.get(1)?,
-            avg_power: row.get(2)?,
-            start_time: row.get(3)?,
-            total_distance: row.get(4)?,
-            total_moving_time: row.get(5)?
+            id: Some(lap_id),
+            avg_heart_rate: avg_heart_rate_col,
+            avg_power: avg_power_col,
+            start_time: start_time_col.parse::<i64>().unwrap(),
+            total_distance: distance_col,
+            total_moving_time: total_moving_time_col
         })
     })?;
 
@@ -229,6 +240,41 @@ fn get_laps_by_session_id(session_id: String) -> Result<Vec<Lap>> {
         .collect();
 
     return Ok(laps);
+}
+
+fn get_records_by_session_id(session_id: String) -> Result<Vec<Record>> {
+    let conn = open_connection()?;
+
+    let mut query = conn.prepare(
+        "select id 
+            , heart_rate
+            , power
+            , timestamp
+            , distance
+        from record
+        where session_id = ?")?;
+
+    let query_result = query.query_map([session_id], |row| {
+        let record_id: i16 = row.get(0)?;
+        let heart_rate_col: i64 = row.get(1)?;
+        let power_col: i64 = row.get(2)?;
+        let timestamp_col: String = row.get(3)?;
+        let distance_col: f64 = row.get(4)?;
+
+        Ok(Record {
+            id: Some(record_id),
+            heart_rate: heart_rate_col,
+            power: power_col,
+            timestamp: timestamp_col.parse::<i64>().unwrap(),
+            distance: distance_col
+        })
+    })?;
+
+    let records: Vec<Record> = query_result.into_iter()
+        .map(|x| x.unwrap())
+        .collect();
+
+    return Ok(records);
 }
 
 pub fn get_sessions_by_year(year: i64) -> Result<Vec<Session>> {
