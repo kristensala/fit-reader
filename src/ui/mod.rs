@@ -2,7 +2,7 @@
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
-    widgets::{Block, Borders, Tabs, Dataset, GraphType, Chart, Axis, Paragraph, Wrap},
+    widgets::{Block, Borders, Tabs, Dataset, GraphType, Chart, Axis, Paragraph, Wrap, Table, Row, Cell},
     Frame, text::{Spans, Span}, style::{Style, Color}, symbols::{DOT, self},
 };
 
@@ -45,48 +45,15 @@ pub fn draw_dashboard<B: Backend>(f: &mut Frame<B>, app: &App) {
     let parent_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Percentage(10),
-            Constraint::Percentage(20),
-            Constraint::Percentage(60),
-            Constraint::Percentage(10)
+            Constraint::Percentage(50),
+            Constraint::Percentage(50),
         ].as_ref())
         .margin(1)
         .split(f.size());
 
-    draw_tabs(f, parent_layout[0]);
+    draw_current_year_summary(f, parent_layout[0]);
 
-    draw_account_stats(f, parent_layout[1]);
-
-    draw_current_year_summary(f, parent_layout[2]);
-
-    draw_session_chart(f, parent_layout[3], app);
-
-}
-
-// Account name
-/// Age
-/// Weight
-/// FTP
-/// Power zones
-fn draw_account_stats<B: Backend>(f: &mut Frame<B>, layout: Rect) {
-    let user_data = vec![
-        Spans::from(Span::styled("Name: Kristen Sala", Style::default())),
-        Spans::from(Span::styled("FTP: 264", Style::default())),
-    ];
-
-    let playing_paragraph = Paragraph::new(user_data)
-        .wrap(Wrap { trim: true })
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(Span::styled(
-                    "User",
-                    Style::default(),
-                ))
-                .border_style(Style::default()),
-        );
-
-    f.render_widget(playing_paragraph, layout);
+    draw_session_chart(f, parent_layout[1], app);
 }
 
 /// Total time
@@ -103,59 +70,61 @@ fn draw_current_year_summary<B: Backend>(f: &mut Frame<B>, layout: Rect) {
     f.render_widget(block, layout);
 }
 
+
 fn draw_session_chart<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
+    let dataset = lib::build_session_records_dataset(app);   
+
+    let num_of_items = 5; // this is the size of the list ex 5 sessions
+
+    // build constraints
+    let c: Vec<Constraint> = (0..num_of_items).into_iter()
+        .map(|_| {
+            let percen = 100 / num_of_items;
+            return Constraint::Percentage(percen);
+        }).collect();
+
     let chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage(10),
-            Constraint::Percentage(90)
-        ].as_ref())
+        .direction(Direction::Vertical)
+        .constraints(c.as_ref())
         .margin(1)
         .split(layout);
 
-    // TODO: display session data
-    let block = Block::default()
-        .title("Session data")
-        .borders(Borders::ALL);
+    for i in 0..5 { // iterate over the latest 3-5 sessions
+        let datasets = vec![
+            Dataset::default()
+                .name("power")
+                .marker(symbols::Marker::Braille)
+                .graph_type(GraphType::Line)
+                .style(Style::default().fg(Color::Cyan))
+                .data(&dataset.power),
+            Dataset::default()
+                .name("heart rate")
+                .marker(symbols::Marker::Braille)
+                .graph_type(GraphType::Line)
+                .style(Style::default().fg(Color::Magenta))
+                .data(&dataset.heart_rate),
+            Dataset::default()
+                .name("Threshold power")
+                .marker(symbols::Marker::Braille)
+                .graph_type(GraphType::Line)
+                .style(Style::default().fg(Color::White))
+                .data(&dataset.threshold_power),
+        ];
 
-    f.render_widget(block, chunks[0]);
+        let chart = Chart::new(datasets)
+            .block(Block::default().title("Latest session").borders(Borders::ALL))
+            .x_axis(Axis::default()
+                .title(Span::styled("Time", Style::default().fg(Color::Red)))
+                .style(Style::default().fg(Color::White))
+                .bounds([0.0, dataset.max_x])
+                .labels(["0.0".to_string(), dataset.max_x.to_string()].iter().cloned().map(Span::from).collect()))
+            .y_axis(Axis::default()
+                .title(Span::styled("power/heart rate", Style::default().fg(Color::Red)))
+                .style(Style::default().fg(Color::White))
+                .bounds([dataset.min_y, dataset.max_y])
+                .labels([dataset.min_y.to_string(), dataset.max_y.to_string()].iter().cloned().map(Span::from).collect()));
 
-    let dataset = lib::build_session_records_dataset(app);   
-
-    let datasets = vec![
-        Dataset::default()
-            .name("power")
-            .marker(symbols::Marker::Braille)
-            .graph_type(GraphType::Line)
-            .style(Style::default().fg(Color::Cyan))
-            .data(&dataset.power),
-        Dataset::default()
-            .name("heart rate")
-            .marker(symbols::Marker::Braille)
-            .graph_type(GraphType::Line)
-            .style(Style::default().fg(Color::Magenta))
-            .data(&dataset.heart_rate),
-        Dataset::default()
-            .name("Threshold power")
-            .marker(symbols::Marker::Braille)
-            .graph_type(GraphType::Line)
-            .style(Style::default().fg(Color::White))
-            .data(&dataset.threshold_power),
-    ];
-
-    let chart = Chart::new(datasets)
-        .block(Block::default().borders(Borders::ALL))
-        .x_axis(Axis::default()
-            .title(Span::styled("Time", Style::default().fg(Color::Red)))
-            .style(Style::default().fg(Color::White))
-            .bounds([0.0, dataset.max_x])
-            .labels(["0.0".to_string(), dataset.max_x.to_string()].iter().cloned().map(Span::from).collect()))
-        .y_axis(Axis::default()
-            .title(Span::styled("power/heart rate", Style::default().fg(Color::Red)))
-            .style(Style::default().fg(Color::White))
-            .bounds([dataset.min_y, dataset.max_y])
-            .labels([dataset.min_y.to_string(), dataset.max_y.to_string()].iter().cloned().map(Span::from).collect()));
-
-    f.render_widget(chart, chunks[1]);
+        f.render_widget(chart, chunks[i]);
+    }
 }
 
