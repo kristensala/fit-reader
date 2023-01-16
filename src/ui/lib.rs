@@ -1,21 +1,21 @@
 use crate::app::App;
 
 pub struct ChartDataset {
-    pub power: [(f64, f64); 200],
-    pub heart_rate: [(f64, f64); 200],
+    pub power: [(f64, f64); 999],
+    pub heart_rate: [(f64, f64); 999],
     pub min_y: f64,
     pub max_y: f64,
     pub max_x: f64,
-    pub threshold_power: [(f64, f64); 200]
+    pub threshold_power: [(f64, f64); 999]
 }
 
 impl ChartDataset {
-    fn new(power_data: [(f64, f64); 200],
-            heart_rate_data: [(f64, f64); 200],
+    fn new(power_data: [(f64, f64); 999],
+            heart_rate_data: [(f64, f64); 999],
             min_y_value: f64,
             max_y_value: f64,
             max_x_value: f64,
-            threshold_power_data: [(f64, f64); 200]) -> Self {
+            threshold_power_data: [(f64, f64); 999]) -> Self {
         return Self {
             power: power_data,
             heart_rate: heart_rate_data,
@@ -30,9 +30,9 @@ impl ChartDataset {
 pub fn build_session_records_dataset(app: &App) -> ChartDataset {
     let latest_session = app.latest_session.to_owned().unwrap();
    
-    let mut power_array: [(f64, f64); 200] = [(0.0, 0.0); 200];
-    let mut heart_array: [(f64, f64); 200] = [(0.0, 0.0); 200];
-    let mut threshold_power_data: [(f64, f64); 200] = [(0.0, 0.0); 200];
+    let mut power_array: [(f64, f64); 999] = [(0.0, 0.0); 999];
+    let mut heart_array: [(f64, f64); 999] = [(0.0, 0.0); 999];
+    let mut threshold_power_data: [(f64, f64); 999] = [(0.0, 0.0); 999];
 
     for (idx, item) in latest_session.records.iter().enumerate() {
         power_array[idx] = (60.0 * idx as f64, item.power as f64);  

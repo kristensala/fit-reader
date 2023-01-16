@@ -13,14 +13,39 @@ use tui::{
     Terminal,
 };
 
+pub enum SessionFilter {
+    ThisYear,
+    LastYear,
+    ThisMonth,
+    ThisWeek
+}
+
+pub enum CyclingType {
+    Indoor,
+    Road,
+    MTB
+}
+
+pub struct Summary {
+    total_distance: f64,
+    total_time: String, // HH:MM
+    cycling_type: CyclingType
+}
+
 pub struct App {
     pub latest_session: Option<Session>,
+    pub session_filter: SessionFilter,
+    pub sessions: Vec<Session>,
+    pub summary: Vec<Summary>
 }
 
 impl Default for App {
     fn default() -> Self {
         App {
             latest_session: None,
+            session_filter: SessionFilter::ThisYear,
+            sessions: Vec::new(), // default by session filter
+            summary: Vec::new() // again based on filter and selected sessions
         }
     }
 }

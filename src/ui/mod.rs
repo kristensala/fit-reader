@@ -2,7 +2,7 @@
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
-    widgets::{Block, Borders, Table, Tabs, Dataset, GraphType, Chart, Axis, Paragraph, Wrap},
+    widgets::{Block, Borders, Tabs, Dataset, GraphType, Chart, Axis, Paragraph, Wrap},
     Frame, text::{Spans, Span}, style::{Style, Color}, symbols::{DOT, self},
 };
 
@@ -59,13 +59,11 @@ pub fn draw_dashboard<B: Backend>(f: &mut Frame<B>, app: &App) {
 
     draw_current_year_summary(f, parent_layout[2]);
 
-    //draw_last_workout_section(f, parent_layout[3]);
-
     draw_session_chart(f, parent_layout[3], app);
 
 }
 
-/// Account name
+// Account name
 /// Age
 /// Weight
 /// FTP
@@ -105,17 +103,23 @@ fn draw_current_year_summary<B: Backend>(f: &mut Frame<B>, layout: Rect) {
     f.render_widget(block, layout);
 }
 
-/// Latest workout graph
-/// and general data about that session
-fn draw_last_workout_section<B: Backend>(f: &mut Frame<B>, layout: Rect) {
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .title("Latest workout");
-
-    f.render_widget(block, layout);
-}
-
 fn draw_session_chart<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(10),
+            Constraint::Percentage(90)
+        ].as_ref())
+        .margin(1)
+        .split(layout);
+
+    // TODO: display session data
+    let block = Block::default()
+        .title("Session data")
+        .borders(Borders::ALL);
+
+    f.render_widget(block, chunks[0]);
+
     let dataset = lib::build_session_records_dataset(app);   
 
     let datasets = vec![
@@ -138,8 +142,9 @@ fn draw_session_chart<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
             .style(Style::default().fg(Color::White))
             .data(&dataset.threshold_power),
     ];
+
     let chart = Chart::new(datasets)
-        .block(Block::default().title("Chart"))
+        .block(Block::default().borders(Borders::ALL))
         .x_axis(Axis::default()
             .title(Span::styled("Time", Style::default().fg(Color::Red)))
             .style(Style::default().fg(Color::White))
@@ -151,5 +156,6 @@ fn draw_session_chart<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
             .bounds([dataset.min_y, dataset.max_y])
             .labels([dataset.min_y.to_string(), dataset.max_y.to_string()].iter().cloned().map(Span::from).collect()));
 
-    f.render_widget(chart, layout);
+    f.render_widget(chart, chunks[1]);
 }
+
