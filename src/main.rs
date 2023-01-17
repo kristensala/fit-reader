@@ -1,6 +1,18 @@
 use std::env;
 use std::fs;
 use anyhow::Result;
+use app::App;
+
+use std::io::stdout;
+use crossterm::{
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
+use tui::{
+    backend::{Backend, CrosstermBackend},
+    Terminal,
+};
 
 mod app;
 mod ui;
@@ -43,10 +55,52 @@ fn main() -> Result<()> {
         return Ok(());
     }
     
-    //let sessions = db::get_all_sessions()?;
-    //println!("{:#?}", sessions);
+    start_ui()?;
 
-    app::run_app()?;
     return Ok(());
+}
+
+fn start_ui() -> Result<()> {
+    // setup terminal
+    enable_raw_mode()?;
+    let mut stdout = stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+
+    // create app and run it
+
+    let mut app = App::new();
+    app.sessions = db::get_all_sessions()?;
+    app.selected_session = app.sessions.first().cloned();
+
+    let res = draw(&mut terminal, &app);
+
+    // restore terminal
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
+    terminal.show_cursor()?;
+
+    if let Err(err) = res {
+        println!("{:?}", err)
+    }
+
+    Ok(())
+}
+
+fn draw<B: Backend>(terminal: &mut Terminal<B>, app: &App) -> Result<()> {
+    loop {
+        terminal.draw(|f| ui::draw_dashboard(f, &app))?;
+
+        if let Event::Key(key) = event::read()? {
+            if let KeyCode::Char('q') = key.code {
+                return Ok(());
+            }
+        }
+    }
 }
 
