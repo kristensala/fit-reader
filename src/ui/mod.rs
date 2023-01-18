@@ -2,44 +2,13 @@
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
-    widgets::{Block, Borders, Tabs, Dataset, GraphType, Chart, Axis, Paragraph, Wrap, Table, Row, Cell},
-    Frame, text::{Spans, Span}, style::{Style, Color}, symbols::{DOT, self},
+    widgets::{Block, Borders, Dataset, GraphType, Chart, Axis},
+    Frame, text::Span, style::{Style, Color}, symbols::{self},
 };
 
 use crate::app::App;
 
 pub mod lib;
-
-pub fn main_layout<B: Backend>(f: &mut Frame<B>) {
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Percentage(10),
-                Constraint::Percentage(80),
-                Constraint::Percentage(10),
-            ]
-            .as_ref(),
-        )
-        .split(f.size());
-
-    let block = Block::default().title("Block").borders(Borders::ALL);
-    f.render_widget(block, chunks[0]);
-    let block = Block::default().title("Block 2").borders(Borders::ALL);
-    f.render_widget(block, chunks[2]);
-}
-
-pub fn draw_tabs<B: Backend>(f: &mut Frame<B>, layout: Rect) {
-    let titles = ["Dashboard", "Sessions"].iter().cloned().map(Spans::from).collect();
-
-    let tabs = Tabs::new(titles)
-        .block(Block::default().title("Tabs").borders(Borders::ALL))
-        .style(Style::default().fg(Color::White))
-        .highlight_style(Style::default().fg(Color::Yellow))
-        .divider(DOT);
-
-    f.render_widget(tabs, layout);
-}
 
 pub fn draw_dashboard<B: Backend>(f: &mut Frame<B>, app: &App) {
     let parent_layout = Layout::default()
@@ -66,9 +35,6 @@ fn draw_current_year_summary<B: Backend>(f: &mut Frame<B>, layout: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
         .title("Summary");
-    let block1 = Block::default()
-        .borders(Borders::ALL)
-        .title("Workout list");
 
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -80,12 +46,23 @@ fn draw_current_year_summary<B: Backend>(f: &mut Frame<B>, layout: Rect) {
         .split(layout);
 
     f.render_widget(block, chunks[0]);
-    f.render_widget(block1, chunks[1]);
+
+    draw_session_list(f, chunks[1]);
+}
+
+
+fn draw_session_list<B: Backend>(f: &mut Frame<B>, layout: Rect) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title("Workout list");
+    
+    //todo: show the whole list of sessions {date - session type(indoor/road/mtb) - time(HH:MM)}
+
+    f.render_widget(block, layout);
 }
 
 //TODO: this will be the solution and show selected session instead
 fn draw_session_chart<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
-    let selected_session = app.selected_session.to_owned();
     let dataset = app.build_session_dataset();
 
     let datasets = vec![

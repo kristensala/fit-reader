@@ -285,7 +285,7 @@ fn get_record_data(data: &Vec<FitDataRecord>) -> Result<Vec<Record>> {
         .filter(|x| x.kind() == MesgNum::Record)
         .collect();
 
-    let n = 60; // data on every minute
+    let n = 3; // data on every 3 seconds
     let records = record_data.iter()
         .skip(n - 1)
         .step_by(n)

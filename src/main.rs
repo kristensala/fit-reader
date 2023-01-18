@@ -21,6 +21,8 @@ mod parser;
 
 fn main() -> Result<()> {
     let mut errors: Vec<String> = Vec::new();
+    let mut files_imported: Vec<String> = Vec::new();
+
     let trainer_road_path = "/home/salakris/Dropbox/Apps/TrainerRoad/";
     let args: Vec<String> = env::args().collect();
 
@@ -43,6 +45,7 @@ fn main() -> Result<()> {
             let session_insert = db::insert_session(session.unwrap());
 
             if session_insert.is_ok() {
+                files_imported.push(String::from(&path));
                 fs::remove_file(path)?;
             } else {
                 let error = session_insert.err();
@@ -50,7 +53,8 @@ fn main() -> Result<()> {
             }
         }
 
-        println!("{:#?}", errors);
+        println!("Errors: {:#?}", errors);
+        println!("Files imported: {:#?}", files_imported);
         
         return Ok(());
     }
@@ -61,14 +65,14 @@ fn main() -> Result<()> {
 }
 
 fn start_ui() -> Result<()> {
-    // setup terminal
     enable_raw_mode()?;
     let mut stdout = stdout();
+
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // create app and run it
 
     let mut app = App::new();
     app.sessions = db::get_all_sessions()?;
@@ -76,7 +80,6 @@ fn start_ui() -> Result<()> {
 
     let res = draw(&mut terminal, &app);
 
-    // restore terminal
     disable_raw_mode()?;
     execute!(
         terminal.backend_mut(),

@@ -159,7 +159,7 @@ pub fn get_all_sessions() -> Result<Vec<Session>> {
             , serial_number
             , start_time
             , threshold_power
-        from session")?;
+        from session order by start_time desc")?;
 
     let query_result = query.query_map([], |row| {
         let session_id: i16 = row.get(0)?;
