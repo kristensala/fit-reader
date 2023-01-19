@@ -15,7 +15,8 @@ pub struct Summary {
 pub struct App {
     pub latest_session: Option<Session>,
     pub sessions: Vec<Session>,
-    pub selected_session: Option<Session>
+    pub selected_session: Option<Session>,
+    pub selected_session_index: Option<usize>
 }
 
 pub struct ChartDataset {
@@ -28,7 +29,7 @@ pub struct ChartDataset {
 }
 
 impl ChartDataset {
-    fn new(power_data: [(f64, f64); 999],
+    pub fn new(power_data: [(f64, f64); 999],
             heart_rate_data: [(f64, f64); 999],
             min_y_value: f64,
             max_y_value: f64,
@@ -48,6 +49,7 @@ impl ChartDataset {
 impl Default for App {
     fn default() -> Self {
         App {
+            selected_session_index: Some(0),
             latest_session: None,
             sessions: Vec::new(),
             selected_session: None
@@ -62,50 +64,11 @@ impl App {
         }
     }
 
-    pub fn select_session(&mut self, session: Option<Session>) {
-        self.selected_session = session;
-    }
-
     pub fn get_summary_by_session_type(&self, session_type: SessionType) {
         todo!();
     }
 
     pub fn get_current_year_summary(&self) {
         todo!();
-    }
-
-    pub fn build_session_dataset(&self) -> ChartDataset {
-        let session = self.selected_session.to_owned().unwrap();
-
-        let mut power_array: [(f64, f64); 999] = [(0.0, 0.0); 999];
-        let mut heart_array: [(f64, f64); 999] = [(0.0, 0.0); 999];
-        let mut threshold_power_data: [(f64, f64); 999] = [(0.0, 0.0); 999];
-
-        for (idx, item) in session.records.iter().enumerate() {
-            power_array[idx] = (60.0 * idx as f64, item.power as f64);  
-            heart_array[idx] = (60.0 * idx as f64, item.heart_rate as f64);
-            threshold_power_data[idx] = (60.0 * idx as f64, session.threshold_power as f64);
-        }
-
-        let min_value_y = session.records.iter()
-            .map(|x| x.heart_rate)
-            .collect::<Vec<i64>>()
-            .iter()
-            .min()
-            .unwrap()
-            .to_owned() as f64;
-
-        let max_value_y = session.records.iter()
-            .map(|x| x.power)
-            .collect::<Vec<i64>>()
-            .iter()
-            .max()
-            .unwrap()
-            .to_owned() as f64;
-
-        let max_value_x = (session.records.last().unwrap().timestamp - session.records.first().unwrap().timestamp) as f64;
-
-        let dataset = ChartDataset::new(power_array, heart_array, min_value_y, max_value_y, max_value_x, threshold_power_data);
-        return dataset;
     }
 }

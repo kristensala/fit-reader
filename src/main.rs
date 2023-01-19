@@ -18,6 +18,7 @@ mod app;
 mod ui;
 mod db;
 mod parser;
+mod util;
 
 fn main() -> Result<()> {
     let mut errors: Vec<String> = Vec::new();

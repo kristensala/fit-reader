@@ -2,27 +2,26 @@
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
-    widgets::{Block, Borders, Dataset, GraphType, Chart, Axis},
-    Frame, text::Span, style::{Style, Color}, symbols::{self},
+    widgets::{Block, Borders, Dataset, GraphType, Chart, Axis, ListItem, List, ListState},
+    Frame, text::Span, style::{Style, Color, Modifier}, symbols::{self},
 };
 
 use crate::app::App;
 
-pub mod lib;
+pub mod util;
 
 pub fn draw_dashboard<B: Backend>(f: &mut Frame<B>, app: &App) {
     let parent_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Percentage(50),
-            Constraint::Percentage(50),
+            Constraint::Percentage(50), Constraint::Percentage(50),
         ].as_ref())
         .margin(1)
         .split(f.size());
 
-    draw_current_year_summary(f, parent_layout[0]);
+    draw_summary(f, parent_layout[0], &app);
 
-    draw_session_chart(f, parent_layout[1], app);
+    draw_session_chart(f, parent_layout[1], &app);
 }
 
 /// Total time
@@ -31,7 +30,7 @@ pub fn draw_dashboard<B: Backend>(f: &mut Frame<B>, app: &App) {
 /// total road time and distance
 /// total indoor time and distance
 /// bar/pie-charts or some sort of charts
-fn draw_current_year_summary<B: Backend>(f: &mut Frame<B>, layout: Rect) {
+fn draw_summary<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
     let block = Block::default()
         .borders(Borders::ALL)
         .title("Summary");
@@ -47,23 +46,35 @@ fn draw_current_year_summary<B: Backend>(f: &mut Frame<B>, layout: Rect) {
 
     f.render_widget(block, chunks[0]);
 
-    draw_session_list(f, chunks[1]);
+    draw_session_list(f, chunks[1], &app);
 }
 
-
-fn draw_session_list<B: Backend>(f: &mut Frame<B>, layout: Rect) {
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .title("Workout list");
-    
+fn draw_session_list<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
+       
     //todo: show the whole list of sessions {date - session type(indoor/road/mtb) - time(HH:MM)}
+    //session.to_sring() creates the strig that I want to show in list view
 
-    f.render_widget(block, layout);
+    // how to handle keyevent to change session selection
+
+    let mut state = ListState::default();
+    state.select(app.selected_session_index);
+
+    let items: Vec<ListItem> = app.sessions.iter()
+        .map(|x| ListItem::new(Span::raw(&x.sub_sport)))
+        .collect();
+
+    let list = List::new(items)
+        .block(Block::default().title("Workout list").borders(Borders::ALL))
+        .style(Style::default().fg(Color::White))
+        .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
+        .highlight_symbol(">> ");
+
+    f.render_stateful_widget(list, layout, &mut state);
 }
 
 //TODO: this will be the solution and show selected session instead
 fn draw_session_chart<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
-    let dataset = app.build_session_dataset();
+    let dataset = util::build_session_dataset(app.selected_session.to_owned().unwrap());
 
     let datasets = vec![
         Dataset::default()

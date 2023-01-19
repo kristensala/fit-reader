@@ -4,6 +4,8 @@ use core::fmt;
 use std::fs::File;
 use anyhow::{Result, Context, bail};
 
+use crate::util;
+
 #[derive(Debug)]
 enum FieldName {
     StartTime,
@@ -81,6 +83,15 @@ impl fmt::Display for FieldName {
         }
     }
 }
+
+impl Session {
+    pub fn to_string(&self) -> String {
+        //util::timestamp_to_string("asdasd"); -> 2022-10-12T13:43
+        todo!();
+        // 2022-10-10 MTB 2h35m 145W 140bpm 
+    }
+}
+
 impl <'a>FromIterator<&'a FitDataField> for Session {
     fn from_iter<T: IntoIterator<Item = &'a FitDataField>>(iter: T) -> Self {
         let fields = iter.into_iter()
@@ -285,7 +296,8 @@ fn get_record_data(data: &Vec<FitDataRecord>) -> Result<Vec<Record>> {
         .filter(|x| x.kind() == MesgNum::Record)
         .collect();
 
-    let n = 3; // data on every 3 seconds
+    let n = 10; // data on every 10 sec -> 3 sec threw an error for some reason, might need to be
+    // an even number
     let records = record_data.iter()
         .skip(n - 1)
         .step_by(n)
