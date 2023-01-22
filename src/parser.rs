@@ -1,5 +1,6 @@
 use fitparser::{self, FitDataRecord, FitDataField, Value};
 use fitparser::profile::MesgNum;
+use rusqlite::OptionalExtension;
 use core::fmt;
 use std::fs::File;
 use anyhow::{Result, Context, bail};
@@ -217,27 +218,43 @@ impl <'a>FromIterator<&'a FitDataField> for Record {
             .collect::<Vec<&FitDataField>>();
 
         let power_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::Power.to_string())
-            .unwrap();
+            .find(|&&x| x.name() == FieldName::Power.to_string());
+
+        let power_option = if power_field.is_some() {
+            Value::try_into(power_field.unwrap().value().to_owned()).unwrap()
+        } else {
+            0 as i64
+        };
 
         let distance_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::Distance.to_string())
-            .unwrap();
+            .find(|&&x| x.name() == FieldName::Distance.to_string());
+        
+        let distance_option = if distance_field.is_some() { 
+            Value::try_into(distance_field.unwrap().value().to_owned()).unwrap()
+        } else { 
+            0 as f64
+        };
+
 
         let timestamp_field = fields.iter()
             .find(|&&x| x.name() == FieldName::Timestamp.to_string())
             .unwrap();
 
         let heart_rate_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::HeartRate.to_string())
-            .expect("If the file is not corrupt, heart rate field should exist");
+            .find(|&&x| x.name() == FieldName::HeartRate.to_string());
+
+        let heart_rate_option = if heart_rate_field.is_some() { 
+            Value::try_into(heart_rate_field.unwrap().value().to_owned()).unwrap()
+        } else { 
+            0
+        };
 
         return Record {
             id: None,
             timestamp: Value::try_into(timestamp_field.value().to_owned()).unwrap(),
-            distance: Value::try_into(distance_field.value().to_owned()).unwrap(),
-            power: Value::try_into(power_field.value().to_owned()).unwrap(),
-            heart_rate: Value::try_into(heart_rate_field.value().to_owned()).unwrap()
+            distance: distance_option,
+            power: power_option,
+            heart_rate: heart_rate_option
         }
     }
 }
@@ -296,7 +313,7 @@ fn get_record_data(data: &Vec<FitDataRecord>) -> Result<Vec<Record>> {
         .filter(|x| x.kind() == MesgNum::Record)
         .collect();
 
-    let n = 10; // data on every 10 sec -> 3 sec threw an error for some reason, might need to be
+    let n = 2; // data on every 10 sec -> 3 sec threw an error for some reason, might need to be
     // an even number
     let records = record_data.iter()
         .skip(n - 1)

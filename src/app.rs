@@ -20,21 +20,21 @@ pub struct App {
 }
 
 pub struct ChartDataset {
-    pub power: [(f64, f64); 999],
-    pub heart_rate: [(f64, f64); 999],
+    pub power: [(f64, f64); 9999],
+    pub heart_rate: [(f64, f64); 9999],
     pub min_y: f64,
     pub max_y: f64,
     pub max_x: f64,
-    pub threshold_power: [(f64, f64); 999]
+    pub threshold_power: [(f64, f64); 9999]
 }
 
 impl ChartDataset {
-    pub fn new(power_data: [(f64, f64); 999],
-            heart_rate_data: [(f64, f64); 999],
+    pub fn new(power_data: [(f64, f64); 9999],
+            heart_rate_data: [(f64, f64); 9999],
             min_y_value: f64,
             max_y_value: f64,
             max_x_value: f64,
-            threshold_power_data: [(f64, f64); 999]) -> Self {
+            threshold_power_data: [(f64, f64); 9999]) -> Self {
         return Self {
             power: power_data,
             heart_rate: heart_rate_data,

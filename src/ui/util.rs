@@ -1,12 +1,12 @@
 use crate::{parser::Session, app::ChartDataset};
 
 pub fn build_session_dataset(session: Session) -> ChartDataset {
-    let mut power_array: [(f64, f64); 999] = [(0.0, 0.0); 999];
-    let mut heart_array: [(f64, f64); 999] = [(0.0, 0.0); 999];
-    let mut threshold_power_data: [(f64, f64); 999] = [(0.0, 0.0); 999];
+    let mut power_array: [(f64, f64); 9999] = [(0.0, 0.0); 9999];
+    let mut heart_array: [(f64, f64); 9999] = [(0.0, 0.0); 9999];
+    let mut threshold_power_data: [(f64, f64); 9999] = [(0.0, 0.0); 9999];
 
     for (idx, item) in session.records.iter().enumerate() {
-        power_array[idx] = (60.0 * idx as f64, item.power as f64);  
+        power_array[idx] = (60.0 * idx as f64, item.power as f64);
         heart_array[idx] = (60.0 * idx as f64, item.heart_rate as f64);
         threshold_power_data[idx] = (60.0 * idx as f64, session.threshold_power as f64);
     }
