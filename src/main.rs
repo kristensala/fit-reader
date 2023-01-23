@@ -28,6 +28,7 @@ fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() > 1 && args[1] == "import" {
+        // TODO: add import as MTB, road or indoor_cycling parameters
         db::init()?;
 
         println!("{}", "Start import");
@@ -79,7 +80,7 @@ fn start_ui() -> Result<()> {
     app.sessions = db::get_all_sessions()?;
     app.selected_session = app.sessions.first().cloned();
 
-    let res = draw(&mut terminal, &app);
+    let res = draw(&mut terminal, app);
 
     disable_raw_mode()?;
     execute!(
@@ -96,13 +97,39 @@ fn start_ui() -> Result<()> {
     Ok(())
 }
 
-fn draw<B: Backend>(terminal: &mut Terminal<B>, app: &App) -> Result<()> {
+fn draw<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> Result<()> {
     loop {
         terminal.draw(|f| ui::draw_dashboard(f, &app))?;
 
         if let Event::Key(key) = event::read()? {
             if let KeyCode::Char('q') = key.code {
                 return Ok(());
+            }
+
+            if let KeyCode::Down = key.code {
+                let max_idx = app.sessions.len();
+                let index = app.selected_session_index.unwrap();
+
+                let mut new_idx = index + 1;
+                if new_idx == max_idx {
+                    new_idx = 0;    
+                }
+
+                app.selected_session_index = Some(new_idx);
+                app.select_session(new_idx);
+            }
+
+            if let KeyCode::Up = key.code {
+                let max_idx = app.sessions.len();
+                let index = app.selected_session_index.unwrap();
+
+                let mut new_idx: usize = if index == 0 { 0 } else { index - 1 };
+                if new_idx == 0 && index == 0 {
+                    new_idx = max_idx - 1;
+                }
+
+                app.selected_session_index = Some(new_idx);
+                app.select_session(new_idx);
             }
         }
     }

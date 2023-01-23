@@ -71,4 +71,8 @@ impl App {
     pub fn get_current_year_summary(&self) {
         todo!();
     }
+
+    pub fn select_session(&mut self, index: usize) {
+        self.selected_session = self.sessions.get(index).cloned(); 
+    }
 }
