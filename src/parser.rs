@@ -1,6 +1,6 @@
+use chrono::{NaiveDateTime, DateTime, Utc};
 use fitparser::{self, FitDataRecord, FitDataField, Value};
 use fitparser::profile::MesgNum;
-use rusqlite::OptionalExtension;
 use core::fmt;
 use std::fs::File;
 use anyhow::{Result, Context, bail};
@@ -87,9 +87,20 @@ impl fmt::Display for FieldName {
 
 impl Session {
     pub fn to_string(&self) -> String {
-        //util::timestamp_to_string("asdasd"); -> 2022-10-12T13:43
-        todo!();
-        // 2022-10-10 MTB 2h35m 145W 140bpm 
+        let naive_datetime = NaiveDateTime::from_timestamp(self.start_time, 0);
+        let start_date_time: DateTime<Utc> = DateTime::from_utc(naive_datetime, Utc);
+        let start_date = start_date_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
+        let hours = ((self.total_moving_time / 60.0) / 60.0) as i64;
+        let minutes = ((self.total_moving_time / 60.0) % 60.0) as i64;
+        let duration = format!("{}h {}m", hours, minutes);
+
+        let result = format!("{} {} {}"
+            , start_date
+            , self.sub_sport
+            , duration);
+        
+        return result;
     }
 }
 
@@ -287,7 +298,8 @@ fn get_session_data(data: &Vec<FitDataRecord>) -> Result<Session> {
         .into_iter()
         .collect();
 
-    let mut parsed_data = Session::from_iter(data_fields.into_iter()); parsed_data.serial_num = get_file_serial_num(data).unwrap();
+    let mut parsed_data = Session::from_iter(data_fields.into_iter());
+    parsed_data.serial_num = get_file_serial_num(data).unwrap();
     parsed_data.laps = get_laps_data(data).unwrap();
     parsed_data.records = get_record_data(data).unwrap();
 
@@ -313,11 +325,10 @@ fn get_record_data(data: &Vec<FitDataRecord>) -> Result<Vec<Record>> {
         .filter(|x| x.kind() == MesgNum::Record)
         .collect();
 
-    let n = 2; // data on every 10 sec -> 3 sec threw an error for some reason, might need to be
-    // an even number
+    let step = 2;
     let records = record_data.iter()
-        .skip(n - 1)
-        .step_by(n)
+        .skip(step - 1)
+        .step_by(step)
         .map(|&x| {
             let record_fields: Vec<&FitDataField> = x.fields().into_iter().collect();
             return Record::from_iter(record_fields.into_iter());

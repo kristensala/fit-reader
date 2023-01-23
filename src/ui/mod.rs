@@ -60,7 +60,7 @@ fn draw_session_list<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
     state.select(app.selected_session_index);
 
     let items: Vec<ListItem> = app.sessions.iter()
-        .map(|x| ListItem::new(Span::raw(&x.sub_sport)))
+        .map(|x| ListItem::new(Span::raw(x.to_string())))
         .collect();
 
     let list = List::new(items)
