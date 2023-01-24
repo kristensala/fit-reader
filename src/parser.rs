@@ -87,20 +87,30 @@ impl fmt::Display for FieldName {
 
 impl Session {
     pub fn to_string(&self) -> String {
-        let naive_datetime = NaiveDateTime::from_timestamp(self.start_time, 0);
-        let start_date_time: DateTime<Utc> = DateTime::from_utc(naive_datetime, Utc);
-        let start_date = start_date_time.format("%Y-%m-%d %H:%M:%S").to_string();
+        let result = format!("{} {} {}"
+            , self.timestamp_as_string()
+            , self.sub_sport
+            , self.moving_time_as_string());
+        
+        return result;
+    }
 
+    pub fn moving_time_as_string(&self) -> String {
         let hours = ((self.total_moving_time / 60.0) / 60.0) as i64;
         let minutes = ((self.total_moving_time / 60.0) % 60.0) as i64;
         let duration = format!("{}h {}m", hours, minutes);
+        return duration;
+    }
+    
+    pub fn distance_as_string(&self) -> String {
+        return format!("{}km", self.total_distance / 1000.0);
+    }
 
-        let result = format!("{} {} {}"
-            , start_date
-            , self.sub_sport
-            , duration);
-        
-        return result;
+    pub fn timestamp_as_string(&self) -> String {
+        let naive_datetime = NaiveDateTime::from_timestamp(self.start_time, 0);
+        let start_date_time: DateTime<Utc> = DateTime::from_utc(naive_datetime, Utc);
+        let start_date = start_date_time.format("%Y-%m-%d %H:%M:%S").to_string();
+        return start_date;
     }
 }
 

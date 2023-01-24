@@ -1,6 +1,6 @@
 use crate::{parser::Session, app::ChartDataset};
 
-pub fn build_session_dataset(session: Session) -> ChartDataset {
+pub fn build_session_dataset(session: &Session) -> ChartDataset {
     let mut power_array: [(f64, f64); 9999] = [(0.0, 0.0); 9999];
     let mut heart_array: [(f64, f64); 9999] = [(0.0, 0.0); 9999];
     let mut threshold_power_data: [(f64, f64); 9999] = [(0.0, 0.0); 9999];
@@ -32,4 +32,3 @@ pub fn build_session_dataset(session: Session) -> ChartDataset {
     let dataset = ChartDataset::new(power_array, heart_array, min_value_y, max_value_y, max_value_x, threshold_power_data);
     return dataset;
 }
-
