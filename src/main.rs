@@ -102,34 +102,23 @@ fn draw<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> Result<()> {
         terminal.draw(|f| ui::draw_dashboard(f, &app))?;
 
         if let Event::Key(key) = event::read()? {
-            if let KeyCode::Char('q') = key.code {
-                return Ok(());
-            }
-
-            if let KeyCode::Down = key.code {
-                let max_idx = app.sessions.len();
-                let index = app.selected_session_index.unwrap();
-
-                let mut new_idx = index + 1;
-                if new_idx == max_idx {
-                    new_idx = 0;    
-                }
-
-                app.selected_session_index = Some(new_idx);
-                app.select_session(new_idx);
-            }
-
-            if let KeyCode::Up = key.code {
-                let max_idx = app.sessions.len();
-                let index = app.selected_session_index.unwrap();
-
-                let mut new_idx: usize = if index == 0 { 0 } else { index - 1 };
-                if new_idx == 0 && index == 0 {
-                    new_idx = max_idx - 1;
-                }
-
-                app.selected_session_index = Some(new_idx);
-                app.select_session(new_idx);
+            match key.code {
+                KeyCode::Char('q') => {
+                    return Ok(());
+                },
+                KeyCode::Char('j') => {
+                    util::move_down_event(&mut app);
+                },
+                KeyCode::Char('k') => {
+                    util::move_up_event(&mut app);
+                },
+                KeyCode::Down => {
+                    util::move_down_event(&mut app);
+                },
+                KeyCode::Up => {
+                    util::move_up_event(&mut app);
+                },
+                _ => ()
             }
         }
     }
