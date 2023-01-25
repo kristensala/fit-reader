@@ -3,22 +3,12 @@ use std::fs;
 use anyhow::Result;
 use app::App;
 
-use std::io::stdout;
-use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-};
-use tui::{
-    backend::{Backend, CrosstermBackend},
-    Terminal,
-};
-
 mod app;
 mod ui;
 mod db;
 mod parser;
 mod util;
+mod summary;
 
 fn main() -> Result<()> {
     let mut errors: Vec<String> = Vec::new();
@@ -60,67 +50,10 @@ fn main() -> Result<()> {
         
         return Ok(());
     }
-    
-    start_ui()?;
+
+    let app = App::new();
+    app.start_ui()?;
 
     return Ok(());
-}
-
-fn start_ui() -> Result<()> {
-    enable_raw_mode()?;
-    let mut stdout = stdout();
-
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
-
-
-    let mut app = App::new();
-    app.sessions = db::get_all_sessions()?;
-    app.selected_session = app.sessions.first().cloned();
-
-    let res = draw(&mut terminal, app);
-
-    disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
-    terminal.show_cursor()?;
-
-    if let Err(err) = res {
-        println!("{:?}", err)
-    }
-
-    Ok(())
-}
-
-fn draw<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> Result<()> {
-    loop {
-        terminal.draw(|f| ui::draw_dashboard(f, &app))?;
-
-        if let Event::Key(key) = event::read()? {
-            match key.code {
-                KeyCode::Char('q') => {
-                    return Ok(());
-                },
-                KeyCode::Char('j') => {
-                    util::move_down_event(&mut app);
-                },
-                KeyCode::Char('k') => {
-                    util::move_up_event(&mut app);
-                },
-                KeyCode::Down => {
-                    util::move_down_event(&mut app);
-                },
-                KeyCode::Up => {
-                    util::move_up_event(&mut app);
-                },
-                _ => ()
-            }
-        }
-    }
 }
 

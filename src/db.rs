@@ -6,6 +6,7 @@ use rusqlite::Connection;
 use crate::parser::Record;
 use crate::parser::Session;
 use crate::parser::Lap;
+use crate::summary::Summary;
 
 //TODO: read a path from ~/.fit-reader file.
 //if .fit-reader does not exist or db path variable is missing show and error 
@@ -276,24 +277,64 @@ fn get_records_by_session_id(session_id: String) -> Result<Vec<Record>> {
     return Ok(records);
 }
 
-// TODO: overall and by sport and subsport... group
-// write a awesome query
-pub fn get_summary_by_sport(year: i64, sport: String) -> Result<()> {
+pub fn get_overall_summary(year: i64) -> Result<Summary> {
     let conn = open_connection()?;
     
     let mut query = conn.prepare(
         "select sum(total_distance)
-                , sum(total_moving_time)
+            , sum(total_moving_time)
         from session")?;
 
+    // TODO: add parameters
     let query_result = query.query_map([], |row| {
-        let total_distance: f64 = row.get(0)?;
-        let total_moving_time: f64 = row.get(1)?;
+        let total_distance_field: f64 = row.get(0)?;
+        let total_moving_time_field: f64 = row.get(1)?;
 
-        Ok(())
+        Ok(Summary {
+            sub_sport: None,
+            total_distance: total_distance_field,
+            total_time: total_moving_time_field
+        })
     })?;
 
-    return Ok(());
+    let result = query_result.into_iter()
+        .map(|x| x.unwrap())
+        .collect::<Vec<Summary>>();
+
+    let overall = result.first()
+        .unwrap()
+        .to_owned();
+
+    return Ok(overall);
+}
+
+pub fn get_detailed_summary(year: i64) -> Result<Vec<Summary>> {
+    let conn = open_connection()?;
+    
+    let mut query = conn.prepare(
+        "select sub_sport 
+            , sum(total_distance)
+            , sum(total_moving_time)
+        from session group by sub_sport")?;
+
+    // TODO: add parameters
+    let query_result = query.query_map([], |row| {
+        let sub_sport_field: String = row.get(0)?;
+        let total_distance_field: f64 = row.get(1)?;
+        let total_moving_time_field: f64 = row.get(2)?;
+
+        Ok(Summary {
+            sub_sport: Some(sub_sport_field),
+            total_distance: total_distance_field,
+            total_time: total_moving_time_field
+        })
+    })?;
+
+    let result = query_result.into_iter()
+        .map(|x| x.unwrap())
+        .collect::<Vec<Summary>>();
+
+    return Ok(result);
 }
 
 fn session_exists(session: Session) -> Result<bool> {

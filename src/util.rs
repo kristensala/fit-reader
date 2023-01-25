@@ -10,7 +10,7 @@ pub fn move_down_event(app: &mut App) {
     }
 
     app.selected_session_index = Some(new_idx);
-    app.select_session(new_idx);
+    app.change_selected_session(new_idx);
 }
 
 pub fn move_up_event(app: &mut App) {
@@ -23,5 +23,5 @@ pub fn move_up_event(app: &mut App) {
     }
 
     app.selected_session_index = Some(new_idx);
-    app.select_session(new_idx);
+    app.change_selected_session(new_idx);
 }
