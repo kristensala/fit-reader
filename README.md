@@ -22,4 +22,5 @@ Just a simple dashboard to filter through my workouts and show an overall summar
 - Summaries are not calculated yet
 - Last 7 weeks section is missing a bar chart which will be based on hours
 - TUI is not responsive what so ever (texts don't wrap)
+- Something seems to be wrong with the session graphs. Some data seems to be missing time to time. (need to look into it)
 - And what ever else I come up on the go...
