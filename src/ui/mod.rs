@@ -13,8 +13,8 @@ pub fn draw_dashboard<B: Backend>(f: &mut Frame<B>, app: &App) {
     let parent_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Percentage(50),
-            Constraint::Percentage(50),
+            Constraint::Percentage(60),
+            Constraint::Percentage(40),
         ].as_ref())
         .margin(1)
         .split(f.size());
@@ -29,7 +29,7 @@ pub fn draw_dashboard<B: Backend>(f: &mut Frame<B>, app: &App) {
 /// total mtb time and distance
 /// total road time and distance
 /// total indoor time and distance
-/// bar/pie-charts or some sort of charts
+/// bar chart of last 5-10 weeks in hours
 fn draw_summary<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
     let block = Block::default()
         .borders(Borders::ALL)
@@ -44,9 +44,108 @@ fn draw_summary<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
         .margin(1)
         .split(layout);
 
-    f.render_widget(block, chunks[0]);
+    //f.render_widget(block, chunks[0]);
+    draw_overview_section(f, chunks[0], &app);
 
     draw_session_list(f, chunks[1], &app);
+}
+
+fn draw_overview_section<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage(50),
+            Constraint::Percentage(50)
+        ].as_ref())
+        .split(layout);
+
+    let overall_summary_block = Block::default()
+        .borders(Borders::ALL)
+        .title("Summary");
+
+    let last_weeks_bar_chart = Block::default()
+        .borders(Borders::ALL)
+        .title("Last 7 weeks");
+
+    let overall_summary_text = vec![
+        Spans::from(format!("Total time: {}", "")),
+        Spans::from(format!("Total distance: {}", "")),
+    ];
+
+    let overall_summary_paragraph = Paragraph::new(overall_summary_text)
+        .block(overall_summary_block);
+
+    draw_summary_section(f, chunks[0], &app);
+    f.render_widget(last_weeks_bar_chart, chunks[1]);
+}
+
+fn draw_summary_section<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(25),
+            Constraint::Percentage(25),
+            Constraint::Percentage(25),
+            Constraint::Percentage(25)
+        ].as_ref())
+        .split(layout);
+
+    let overall_summary_block = Block::default()
+        .borders(Borders::ALL)
+        .title("Overall");
+
+    let indoor_summary_block = Block::default()
+        .borders(Borders::ALL)
+        .title("Indoor");
+
+    let road_summary_block = Block::default()
+        .borders(Borders::ALL)
+        .title("Road");
+
+    let mtb_summary_block = Block::default()
+        .borders(Borders::ALL)
+        .title("MTB");
+
+    let overall_summary_text = vec![
+        Spans::from(format!("Total time: {}", "")),
+        Spans::from(format!("Total distance: {}", "")),
+        Spans::from(format!("Total rides: {}", "")),
+    ];
+
+    let indoor_summary_text = vec![
+        Spans::from(format!("Total time: {}", "")),
+        Spans::from(format!("Total distance: {}", "")),
+        Spans::from(format!("Total rides: {}", "")),
+    ];
+
+    let road_summary_text = vec![
+        Spans::from(format!("Total time: {}", "")),
+        Spans::from(format!("Total distance: {}", "")),
+        Spans::from(format!("Total rides: {}", "")),
+    ];
+
+    let mtb_summary_text = vec![
+        Spans::from(format!("Total time: {}", "")),
+        Spans::from(format!("Total distance: {}", "")),
+        Spans::from(format!("Total rides: {}", "")),
+    ];
+
+    let overall_summary_paragraph = Paragraph::new(overall_summary_text)
+        .block(overall_summary_block);
+
+    let indoor_summary_paragraph = Paragraph::new(indoor_summary_text)
+        .block(indoor_summary_block);
+
+    let road_summary_paragraph = Paragraph::new(road_summary_text)
+        .block(road_summary_block);
+
+    let mtb_summary_paragraph = Paragraph::new(mtb_summary_text)
+        .block(mtb_summary_block);
+
+    f.render_widget(overall_summary_paragraph, chunks[0]);
+    f.render_widget(indoor_summary_paragraph, chunks[1]);
+    f.render_widget(road_summary_paragraph, chunks[2]);
+    f.render_widget(mtb_summary_paragraph, chunks[3]);
 }
 
 fn draw_session_list<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
