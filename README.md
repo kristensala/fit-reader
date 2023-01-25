@@ -5,7 +5,7 @@ Just a simple dashboard to filter through my workouts and show an overall summar
 
 ![image](/images/tui.jpg)
 
-## Set up
+## Setup
 ### Linux
 - todo!()
 
