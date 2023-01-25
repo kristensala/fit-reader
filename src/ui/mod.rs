@@ -31,10 +31,6 @@ pub fn draw_dashboard<B: Backend>(f: &mut Frame<B>, app: &App) {
 /// total indoor time and distance
 /// bar chart of last 5-10 weeks in hours
 fn draw_summary<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .title("Summary");
-
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
@@ -59,21 +55,9 @@ fn draw_overview_section<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) 
         ].as_ref())
         .split(layout);
 
-    let overall_summary_block = Block::default()
-        .borders(Borders::ALL)
-        .title("Summary");
-
     let last_weeks_bar_chart = Block::default()
         .borders(Borders::ALL)
         .title("Last 7 weeks");
-
-    let overall_summary_text = vec![
-        Spans::from(format!("Total time: {}", "")),
-        Spans::from(format!("Total distance: {}", "")),
-    ];
-
-    let overall_summary_paragraph = Paragraph::new(overall_summary_text)
-        .block(overall_summary_block);
 
     draw_summary_section(f, chunks[0], &app);
     f.render_widget(last_weeks_bar_chart, chunks[1]);
@@ -107,27 +91,34 @@ fn draw_summary_section<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
         .title("MTB");
 
     let overall_summary_text = vec![
-        Spans::from(format!("Total time: {}", "")),
+        Spans::from(""),
+        Spans::from(format!("Total duration: {}", "")),
         Spans::from(format!("Total distance: {}", "")),
         Spans::from(format!("Total rides: {}", "")),
+        Spans::from(""),
+        Spans::from(format!("Total time w/o indoor: {}", "")),
+        Spans::from(format!("Total distance w/o indoor: {}", "")),
     ];
 
     let indoor_summary_text = vec![
-        Spans::from(format!("Total time: {}", "")),
+        Spans::from(format!("Total duration: {}", "")),
         Spans::from(format!("Total distance: {}", "")),
         Spans::from(format!("Total rides: {}", "")),
+        Spans::from(format!("AVG session duration: {}", "")),
     ];
 
     let road_summary_text = vec![
-        Spans::from(format!("Total time: {}", "")),
+        Spans::from(format!("Total duration: {}", "")),
         Spans::from(format!("Total distance: {}", "")),
         Spans::from(format!("Total rides: {}", "")),
+        Spans::from(format!("AVG session duration: {}", "")),
     ];
 
     let mtb_summary_text = vec![
-        Spans::from(format!("Total time: {}", "")),
+        Spans::from(format!("Total duration: {}", "")),
         Spans::from(format!("Total distance: {}", "")),
         Spans::from(format!("Total rides: {}", "")),
+        Spans::from(format!("AVG session duration: {}", "")),
     ];
 
     let overall_summary_paragraph = Paragraph::new(overall_summary_text)
