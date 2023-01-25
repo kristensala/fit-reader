@@ -1,6 +1,8 @@
 # Fit Reader TUI
 Just a simple dashboard to filter through my workouts and show an overall summary and summary of road/mtb/indoor individually. Workouts are only implemented by importing .fit files which are generated after each workout by smart devices (Garmin, Wahoo, Mobile apps...). Manual workout editing or adding is not available.
 
+**PS! This is my first Rust project. Still learning and trying to make sense of many things.**
+
 ![image](/images/tui.jpg)
 
 ## Set up
