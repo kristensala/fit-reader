@@ -10,6 +10,13 @@ pub struct Summary {
 }
 
 impl Summary {
+    pub fn new(sub_sport: String) -> Self {
+        return Self {
+            sub_sport: Some(sub_sport),
+            total_distance: 0.0,
+            total_time: 0.0
+        };
+    }
     /// Gets summary for each sub sport separately
     pub fn detailed(year: i64) -> Result<Vec<Summary>> {
         let summary_result = db::get_detailed_summary(year);
