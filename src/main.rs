@@ -19,7 +19,7 @@ fn main() -> Result<()> {
 
     if args.len() > 1 && args[1] == "import" {
         // TODO: add import as MTB, road or indoor_cycling parameters
-        db::init()?;
+        db::create()?;
 
         println!("{}", "Start import");
 
@@ -34,13 +34,13 @@ fn main() -> Result<()> {
                 continue;
             }
 
-            let session_insert = db::insert_session(session.unwrap());
+            let session_insert_response = db::insert_session(session.unwrap());
 
-            if session_insert.is_ok() {
+            if session_insert_response.is_ok() {
                 files_imported.push(String::from(&path));
                 fs::remove_file(path)?;
             } else {
-                let error = session_insert.err();
+                let error = session_insert_response.err();
                 errors.push(format!("Failed to import session {}; Error: {}", &path, error.unwrap()));
             }
         }

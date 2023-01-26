@@ -18,7 +18,7 @@ fn open_connection() -> Result<Connection> {
     return Ok(conn);
 }
 
-pub fn init() -> Result<()> {
+pub fn create() -> Result<()> {
     let connection = open_connection()?;
 
     connection.execute(
@@ -285,7 +285,6 @@ pub fn get_overall_summary(year: i64) -> Result<Summary> {
             , sum(total_moving_time)
         from session")?;
 
-    // TODO: add parameters
     let query_result = query.query_map([], |row| {
         let total_distance_field: f64 = row.get(0)?;
         let total_moving_time_field: f64 = row.get(1)?;

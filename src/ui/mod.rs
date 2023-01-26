@@ -20,16 +20,9 @@ pub fn draw_dashboard<B: Backend>(f: &mut Frame<B>, app: &App) {
         .split(f.size());
 
     draw_summary(f, parent_layout[0], &app);
-
     draw_session_chart(f, parent_layout[1], &app);
 }
 
-/// Total time
-/// Total distance
-/// total mtb time and distance
-/// total road time and distance
-/// total indoor time and distance
-/// bar chart of last 5-10 weeks in hours
 fn draw_summary<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -40,9 +33,7 @@ fn draw_summary<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
         .margin(1)
         .split(layout);
 
-    //f.render_widget(block, chunks[0]);
     draw_overview_section(f, chunks[0], &app);
-
     draw_session_list(f, chunks[1], &app);
 }
 
@@ -91,6 +82,7 @@ fn draw_summary_section<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
         .title("MTB");
 
     let overall_summary_text = vec![
+        Spans::from(format!("Threshold power: {}", "")),
         Spans::from(""),
         Spans::from(format!("Total duration: {}", "")),
         Spans::from(format!("Total distance: {}", "")),
@@ -112,6 +104,7 @@ fn draw_summary_section<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
         Spans::from(format!("Total distance: {}", "")),
         Spans::from(format!("Total rides: {}", "")),
         Spans::from(format!("AVG session duration: {}", "")),
+        Spans::from(format!("AVG session distance: {}", "")),
     ];
 
     let mtb_summary_text = vec![
@@ -119,6 +112,7 @@ fn draw_summary_section<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
         Spans::from(format!("Total distance: {}", "")),
         Spans::from(format!("Total rides: {}", "")),
         Spans::from(format!("AVG session duration: {}", "")),
+        Spans::from(format!("AVG session distance: {}", "")),
     ];
 
     let overall_summary_paragraph = Paragraph::new(overall_summary_text)
@@ -168,7 +162,6 @@ fn draw_session_chart<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
         ].as_ref())
         .margin(1)
         .split(layout);
-
 
     let block = Block::default()
         .borders(Borders::ALL)
