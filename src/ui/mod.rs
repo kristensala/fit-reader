@@ -26,6 +26,7 @@ struct Total {
 
 impl Total {
     pub fn new() -> Self {
+        //todo: get current year
         let overall = Summary::overall(2022);
         let detailed = Summary::detailed(2022);
 
@@ -49,20 +50,40 @@ impl Total {
             let overall_data = overall.unwrap();
             total_overall_distance = overall_data.total_distance;
             total_overall_duration = overall_data.total_time;
+            total_overall_rides = overall_data.rides_count;
         }
 
         if detailed.is_ok() {
             let details = detailed.unwrap();
 
             let indoor_summary = details.iter().find(|x| x.sub_sport == Some("indoor_cycling".to_string()));
-            let road_summary = details.iter().find(|x| x.sub_sport == Some("road_cycling".to_string())); // don't know the string
-            let mtb_summary = details.iter().find(|x| x.sub_sport == Some("mountain_bike_ride".to_string())); // don't know the string
+            let road_summary = details.iter().find(|x| x.sub_sport == Some("road_cycling".to_string())); // don't know the string in the file
+            let mtb_summary = details.iter().find(|x| x.sub_sport == Some("mountain_bike_ride".to_string())); // don't know the string in the file
 
             // is this a better solution??
             match indoor_summary {
                 Some(value) => {
                     total_indoor_duration = value.total_time;
                     total_indoor_distance = value.total_distance;
+                    total_indoor_rides = value.rides_count;
+                },
+                None => ()
+            };
+
+            match road_summary {
+                Some(value) => {
+                    total_road_duration = value.total_time;
+                    total_road_distance = value.total_distance;
+                    total_road_rides = value.rides_count;
+                },
+                None => ()
+            };
+
+            match mtb_summary {
+                Some(value) => {
+                    total_mtb_duration = value.total_time;
+                    total_mtb_distance = value.total_distance;
+                    total_mtb_rides = value.rides_count;
                 },
                 None => ()
             };
@@ -257,6 +278,9 @@ fn draw_session_chart<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
         Spans::from(format!("AVG Power: {}", selected_session.avg_power)),
         Spans::from(format!("AVG Cadence: {}", selected_session.avg_cadence)),
         Spans::from(format!("Threshold power: {}", selected_session.threshold_power)),
+        Spans::from(format!("Max x: {}", dataset.max_x)),
+        Spans::from(format!("power x: {}", dataset.power.len())),
+        Spans::from(format!("hr x: {}", dataset.heart_rate.len())),
     ];
 
     let paragraph = Paragraph::new(text)

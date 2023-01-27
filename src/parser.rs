@@ -5,7 +5,10 @@ use core::fmt;
 use std::fs::File;
 use anyhow::{Result, Context, bail};
 
-use crate::util;
+// todo: alse set equivalent strings like in fieldName
+enum SubSport {
+    IndoorCycling
+}
 
 #[derive(Debug)]
 enum FieldName {
@@ -335,10 +338,7 @@ fn get_record_data(data: &Vec<FitDataRecord>) -> Result<Vec<Record>> {
         .filter(|x| x.kind() == MesgNum::Record)
         .collect();
 
-    let step = 2;
     let records = record_data.iter()
-        .skip(step - 1)
-        .step_by(step)
         .map(|&x| {
             let record_fields: Vec<&FitDataField> = x.fields().into_iter().collect();
             return Record::from_iter(record_fields.into_iter());

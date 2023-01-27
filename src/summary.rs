@@ -7,6 +7,7 @@ pub struct Summary {
     pub sub_sport: Option<String>,
     pub total_distance: f64,
     pub total_time: f64,
+    pub rides_count: i64
 }
 
 impl Summary {
@@ -14,7 +15,8 @@ impl Summary {
         return Self {
             sub_sport: Some(sub_sport),
             total_distance: 0.0,
-            total_time: 0.0
+            total_time: 0.0,
+            rides_count: 0
         };
     }
     /// Gets summary for each sub sport separately
@@ -37,7 +39,8 @@ impl Summary {
         return Ok(Summary {
             sub_sport: None,
             total_distance: 0.0,
-            total_time: 0.0
+            total_time: 0.0,
+            rides_count: 0
         });
     }
 }

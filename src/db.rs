@@ -283,16 +283,19 @@ pub fn get_overall_summary(year: i64) -> Result<Summary> {
     let mut query = conn.prepare(
         "select sum(total_distance)
             , sum(total_moving_time)
+            , count(*)
         from session")?;
 
     let query_result = query.query_map([], |row| {
         let total_distance_field: f64 = row.get(0)?;
         let total_moving_time_field: f64 = row.get(1)?;
+        let rides_cound_field: i64 = row.get(2)?;
 
         Ok(Summary {
             sub_sport: None,
             total_distance: total_distance_field,
-            total_time: total_moving_time_field
+            total_time: total_moving_time_field,
+            rides_count: rides_cound_field
         })
     })?;
 
@@ -314,6 +317,7 @@ pub fn get_detailed_summary(year: i64) -> Result<Vec<Summary>> {
         "select sub_sport 
             , sum(total_distance)
             , sum(total_moving_time)
+            , count(*)
         from session group by sub_sport")?;
 
     // TODO: add parameters
@@ -321,11 +325,13 @@ pub fn get_detailed_summary(year: i64) -> Result<Vec<Summary>> {
         let sub_sport_field: String = row.get(0)?;
         let total_distance_field: f64 = row.get(1)?;
         let total_moving_time_field: f64 = row.get(2)?;
+        let rides_cound_field: i64 = row.get(3)?;
 
         Ok(Summary {
             sub_sport: Some(sub_sport_field),
             total_distance: total_distance_field,
-            total_time: total_moving_time_field
+            total_time: total_moving_time_field,
+            rides_count: rides_cound_field
         })
     })?;
 
