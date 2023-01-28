@@ -54,7 +54,8 @@ pub fn build_session_dataset(session: &Session) -> ChartDataset {
         .unwrap()
         .to_owned() as f64;
 
-    let max_value_x = power_array.len() as f64;
+    let max_value_x = heart_array.len() as f64;
+
     let dataset = ChartDataset::new(power_array, heart_array, min_value_y, max_value_y, max_value_x, threshold_power_data);
     return dataset;
 }

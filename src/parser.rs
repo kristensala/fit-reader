@@ -244,21 +244,18 @@ impl <'a>FromIterator<&'a FitDataField> for Record {
         let power_field = fields.iter()
             .find(|&&x| x.name() == FieldName::Power.to_string());
 
-        let power_option = if power_field.is_some() {
-            Value::try_into(power_field.unwrap().value().to_owned()).unwrap()
-        } else {
-            0 as i64
+        let power_option = match power_field {
+            Some(power) => Value::try_into(power.value().to_owned()).unwrap(),
+            None => 0
         };
 
         let distance_field = fields.iter()
             .find(|&&x| x.name() == FieldName::Distance.to_string());
         
-        let distance_option = if distance_field.is_some() { 
-            Value::try_into(distance_field.unwrap().value().to_owned()).unwrap()
-        } else { 
-            0 as f64
+        let distance_option = match distance_field {
+            Some(dist) => Value::try_into(dist.value().to_owned()).unwrap(),
+            None => 0 as f64
         };
-
 
         let timestamp_field = fields.iter()
             .find(|&&x| x.name() == FieldName::Timestamp.to_string())
@@ -267,10 +264,9 @@ impl <'a>FromIterator<&'a FitDataField> for Record {
         let heart_rate_field = fields.iter()
             .find(|&&x| x.name() == FieldName::HeartRate.to_string());
 
-        let heart_rate_option = if heart_rate_field.is_some() { 
-            Value::try_into(heart_rate_field.unwrap().value().to_owned()).unwrap()
-        } else { 
-            0
+        let heart_rate_option = match heart_rate_field {
+            Some(heart_rate) => Value::try_into(heart_rate.value().to_owned()).unwrap(),
+            None => 0
         };
 
         return Record {

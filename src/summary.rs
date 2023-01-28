@@ -19,6 +19,7 @@ impl Summary {
             rides_count: 0
         };
     }
+
     /// Gets summary for each sub sport separately
     pub fn detailed(year: i64) -> Result<Vec<Summary>> {
         let summary_result = db::get_detailed_summary(year);

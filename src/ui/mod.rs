@@ -278,9 +278,6 @@ fn draw_session_chart<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
         Spans::from(format!("AVG Power: {}", selected_session.avg_power)),
         Spans::from(format!("AVG Cadence: {}", selected_session.avg_cadence)),
         Spans::from(format!("Threshold power: {}", selected_session.threshold_power)),
-        Spans::from(format!("Max x: {}", dataset.max_x)),
-        Spans::from(format!("power x: {}", dataset.power.len())),
-        Spans::from(format!("hr x: {}", dataset.heart_rate.len())),
     ];
 
     let paragraph = Paragraph::new(text)
