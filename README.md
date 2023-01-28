@@ -21,8 +21,8 @@ Just a simple dashboard to filter through my workouts and show an overall summar
 - Run: `cargo run import`
 
 ## TODO
-- Summaries are not calculated yet
-- Last 7 weeks section is missing a bar chart which will be based on hours
-- TUI is not responsive what so ever (texts don't wrap)
-- I don't know what will happen if the amount of sessions won't fit into the session list block (Is there a way to make it scrollable? -> probably) 
+- [ ] Summaries are not calculated yet
+- [ ] Last 7 weeks section is missing a bar chart which will be based on hours (for some reasong I'm also getting week 52 with only this years data???)
+- [ ] TUI is not responsive what so ever (texts don't wrap)
+- [ ] I don't know what will happen if the amount of sessions won't fit into the session list block (Is there a way to make it scrollable? -> probably) 
 - And what ever else I come up on the go...
