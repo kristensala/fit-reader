@@ -1,7 +1,9 @@
+use chrono::{NaiveDateTime, Datelike};
+use itertools::Itertools;
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
-    widgets::{Block, Borders, Dataset, GraphType, Chart, Axis, ListItem, List, ListState, Paragraph},
+    widgets::{Block, Borders, Dataset, GraphType, Chart, Axis, ListItem, List, ListState, Paragraph, BarChart},
     Frame, text::{Span, Spans}, style::{Style, Color, Modifier}, symbols::{self},
 };
 
@@ -60,7 +62,6 @@ impl Total {
             let road_summary = details.iter().find(|x| x.sub_sport == Some("road_cycling".to_string())); // don't know the string in the file
             let mtb_summary = details.iter().find(|x| x.sub_sport == Some("mountain_bike_ride".to_string())); // don't know the string in the file
 
-            // is this a better solution??
             match indoor_summary {
                 Some(value) => {
                     total_indoor_duration = value.total_time;
@@ -130,11 +131,11 @@ fn draw_summary<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
         .margin(1)
         .split(layout);
 
-    draw_overview_section(f, chunks[0]);
+    draw_overview_section(f, chunks[0], &app);
     draw_session_list(f, chunks[1], &app);
 }
 
-fn draw_overview_section<B: Backend>(f: &mut Frame<B>, layout: Rect) {
+fn draw_overview_section<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -143,12 +144,38 @@ fn draw_overview_section<B: Backend>(f: &mut Frame<B>, layout: Rect) {
         ].as_ref())
         .split(layout);
 
-    let last_weeks_bar_chart = Block::default()
-        .borders(Borders::ALL)
-        .title("Last 7 weeks");
+    let data: Vec<(String, u64)> = app.sessions.iter()
+        .map(|session| {
+            let naive_datetime = NaiveDateTime::from_timestamp_opt(session.start_time, 0).unwrap();
+            let duration = session.total_moving_time as u64;
+            return (format!("W{}", naive_datetime.iso_week().week().to_string()), duration);
+        }).collect();
+    
+    //todo: why is there a week 52???
+    let result: Vec<(&str, u64)> = data.iter()
+        .map(|(a, b)| (a.as_str(), *b)).collect();
+
+    let summed: Vec<(&str, u64)> = result.iter()
+        .group_by(|(a, _)| a)
+        .into_iter()
+        .map(|(x, y)| {
+            let sum: u64  = y.into_iter()
+                .map(|(_, b)| *b)
+                .collect::<Vec<u64>>()
+                .iter()
+                .sum();
+            return (*x, sum);
+        }).collect();
+
+
+    let bar_chart = BarChart::default()
+        .block(Block::default().title("BarChart").borders(Borders::ALL))
+        .bar_width(10)
+        .bar_gap(1)
+        .data(&summed);
 
     draw_summary_section(f, chunks[0]);
-    f.render_widget(last_weeks_bar_chart, chunks[1]);
+    f.render_widget(bar_chart, chunks[1]);
 }
 
 fn draw_summary_section<B: Backend>(f: &mut Frame<B>, layout: Rect) {

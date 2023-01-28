@@ -1,4 +1,4 @@
-use chrono::{NaiveDateTime, DateTime, Utc};
+use chrono::{NaiveDateTime, DateTime, Utc, Datelike};
 use fitparser::{self, FitDataRecord, FitDataField, Value};
 use fitparser::profile::MesgNum;
 use core::fmt;
@@ -110,7 +110,7 @@ impl Session {
     }
 
     pub fn timestamp_as_string(&self) -> String {
-        let naive_datetime = NaiveDateTime::from_timestamp(self.start_time, 0);
+        let naive_datetime = NaiveDateTime::from_timestamp_opt(self.start_time, 0).unwrap();
         let start_date_time: DateTime<Utc> = DateTime::from_utc(naive_datetime, Utc);
         let start_date = start_date_time.format("%Y-%m-%d %H:%M:%S").to_string();
         return start_date;
