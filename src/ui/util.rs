@@ -1,3 +1,5 @@
+use chrono::{NaiveDateTime, DateTime, Utc};
+
 use crate::parser::Session;
 
 pub struct ChartDataset {
@@ -60,3 +62,29 @@ pub fn build_session_dataset(session: &Session) -> ChartDataset {
     return dataset;
 }
 
+pub fn sessio_to_string(session: &Session) -> String {
+    let result = format!("{} {} {}"
+        , timestamp_as_string(session.start_time)
+        , session.sub_sport
+        , moving_time_to_hour_minute_string(session.total_moving_time));
+
+    return result;
+}
+
+pub fn moving_time_to_hour_minute_string(moving_time: f64) -> String {
+    let hours = ((moving_time / 60.0) / 60.0) as i64;
+    let minutes = ((moving_time / 60.0) % 60.0) as i64;
+    let duration = format!("{}h {}m", hours, minutes);
+    return duration;
+}
+
+pub fn timestamp_as_string(timestamp: i64) -> String {
+    let naive_datetime = NaiveDateTime::from_timestamp_opt(timestamp, 0).unwrap();
+    let start_date_time: DateTime<Utc> = DateTime::from_utc(naive_datetime, Utc);
+    let start_date = start_date_time.format("%Y-%m-%d %H:%M:%S").to_string();
+    return start_date;
+}
+
+pub fn distance_as_string(distance: f64) -> String {
+    return format!("{:.2}km", distance / 1000.0);
+}

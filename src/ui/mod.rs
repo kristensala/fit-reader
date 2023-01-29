@@ -169,7 +169,7 @@ fn draw_overview_section<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) 
 
 
     let bar_chart = BarChart::default()
-        .block(Block::default().title("BarChart").borders(Borders::ALL))
+        .block(Block::default().title("Weekly data by duration").borders(Borders::ALL))
         .bar_width(10)
         .bar_gap(1)
         .data(&summed);
@@ -210,8 +210,8 @@ fn draw_summary_section<B: Backend>(f: &mut Frame<B>, layout: Rect) {
     let overall_summary_text = vec![
         Spans::from(format!("Threshold power: {}", "")),
         Spans::from(""),
-        Spans::from(format!("Total duration: {}", total.overall_duration)),
-        Spans::from(format!("Total distance: {}", total.overall_distance)),
+        Spans::from(format!("Total duration: {}", util::moving_time_to_hour_minute_string(total.overall_duration))),
+        Spans::from(format!("Total distance: {}", util::distance_as_string(total.overall_distance))),
         Spans::from(format!("Total rides: {}", total.overall_rides_count)),
         Spans::from(""),
         Spans::from(format!("Total time w/o indoor: {}", "")),
@@ -219,8 +219,8 @@ fn draw_summary_section<B: Backend>(f: &mut Frame<B>, layout: Rect) {
     ];
 
     let indoor_summary_text = vec![
-        Spans::from(format!("Total duration: {}", total.indoor_duration)),
-        Spans::from(format!("Total distance: {}", total.indoor_distance)),
+        Spans::from(format!("Total duration: {}", util::moving_time_to_hour_minute_string(total.indoor_duration))),
+        Spans::from(format!("Total distance: {}", util::distance_as_string(total.indoor_distance))),
         Spans::from(format!("Total rides: {}", total.indoor_rides_count)),
         Spans::from(format!("AVG session duration: {}", "")),
     ];
@@ -266,7 +266,7 @@ fn draw_session_list<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
     state.select(app.selected_session_index);
 
     let items: Vec<ListItem> = app.sessions.iter()
-        .map(|x| ListItem::new(Span::raw(x.to_string())))
+        .map(|x| ListItem::new(Span::raw(util::sessio_to_string(x))))
         .collect();
 
     let list = List::new(items)
@@ -296,11 +296,11 @@ fn draw_session_chart<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) {
         .title("Data");
 
     let text = vec![
-        Spans::from(format!("Date: {}", selected_session.timestamp_as_string())),
+        Spans::from(format!("Date: {}", util::timestamp_as_string(selected_session.start_time))),
         Spans::from(format!("Type: {}", selected_session.sub_sport)),
         Spans::from(""),
-        Spans::from(format!("Duration: {}", selected_session.moving_time_as_string())),
-        Spans::from(format!("Distance: {}", selected_session.distance_as_string())),
+        Spans::from(format!("Duration: {}", util::moving_time_to_hour_minute_string(selected_session.total_moving_time))),
+        Spans::from(format!("Distance: {}", util::distance_as_string(selected_session.total_distance))),
         Spans::from(format!("AVG Heart rate: {}", selected_session.avg_heart_rate)),
         Spans::from(format!("AVG Power: {}", selected_session.avg_power)),
         Spans::from(format!("AVG Cadence: {}", selected_session.avg_cadence)),
