@@ -255,11 +255,30 @@ fn get_records_by_session_id(session_id: String) -> Result<Vec<Record>> {
         where session_id = ?")?;
 
     let query_result = query.query_map([session_id], |row| {
-        let record_id: i16 = row.get(0)?;
-        let heart_rate_col: i64 = row.get(1)?;
-        let power_col: i64 = row.get(2)?;
-        let timestamp_col: String = row.get(3)?;
-        let distance_col: f64 = row.get(4)?;
+        let record_id: i16 = match row.get(0) {
+            Ok(value) => value,
+            Err(_) => 0
+        };
+
+        let heart_rate_col: i64 = match row.get(1) {
+            Ok(value) => value,
+            Err(_) => 0
+        };
+
+        let power_col: i64 = match row.get(2) {
+            Ok(value) => value,
+            Err(_) => 0
+        };
+
+        let timestamp_col: String = match row.get(3) {
+            Ok(value) => value,
+            Err(_) => String::from("")
+        };
+
+        let distance_col: f64 = match row.get(4) {
+            Ok(value) => value,
+            Err(_) => 0.0
+        };
 
         Ok(Record {
             id: Some(record_id),
@@ -271,7 +290,12 @@ fn get_records_by_session_id(session_id: String) -> Result<Vec<Record>> {
     })?;
 
     let records: Vec<Record> = query_result.into_iter()
-        .map(|x| x.unwrap())
+        .map(|x| {
+            return match x {
+                Ok(value) => value,
+                Err(_) => Record { id: None, timestamp: 0, heart_rate: 0, power: 0, distance: 0.0 }
+            };
+        })
         .collect();
 
     return Ok(records);
