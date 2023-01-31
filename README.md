@@ -3,7 +3,7 @@ Just a simple dashboard to filter through my workouts and show an overall summar
 
 **PS! This is my first Rust project. Still learning and trying to make sense of many things.**
 
-![image](/images/tui.jpg)
+![image](/images/tui1.jpg)
 
 ## Setup
 ### Linux
