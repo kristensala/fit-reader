@@ -21,7 +21,7 @@ Just a simple dashboard to filter through my workouts and show an overall summar
 - Run: `cargo run import`
 
 ## TODO
-- [ ] Add the ability to read environment variables or the ricing ability
+- [x] Add the ability to read environment variables or the ricing ability
 - [ ] Summaries are not calculated yet
 - [ ] Last 7 weeks section is missing a bar chart which will be based on hours (for some reasong I'm also getting week 52 with only this years data???)
 - [ ] TUI is not responsive what so ever (texts don't wrap)
