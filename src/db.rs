@@ -161,18 +161,65 @@ pub fn get_all_sessions() -> Result<Vec<Session>> {
         from session order by start_time desc")?;
 
     let query_result = query.query_map([], |row| {
-        let session_id: i16 = row.get(0)?;
-        let sport_col: String = row.get(1)?;
-        let sub_sport_col: String = row.get(2)?;
-        let avg_power_col: i64 = row.get(3)?;
-        let avg_heart_rate_col: i64 = row.get(4)?;
-        let total_distance_col: f64 = row.get(5)?;
-        let total_moving_time_col: f64 = row.get(6)?;
-        let total_elapsed_time_col: f64 = row.get(7)?;
-        let avg_cadence_col: i64 = row.get(8)?;
-        let serial_num_col: i64 = row.get(9)?;
-        let start_time_col: String = row.get(10)?;
-        let threshold_power_col: i64 = row.get(11)?;
+        let session_id: i16 = match row.get(0) {
+            Ok(value) => value,
+            Err(_) => 0
+        };
+
+        let sport_col: String = match row.get(1) {
+            Ok(value) => value,
+            Err(_) => String::from("")
+        };
+
+        let sub_sport_col: String = match row.get(2) {
+            Ok(value) => value,
+            Err(_) => String::from("")
+        };
+
+        let avg_power_col: i64 = match row.get(3) {
+            Ok(value) => value,
+            Err(_) => 0
+        };
+
+        let avg_heart_rate_col: i64 = match row.get(4) {
+            Ok(value) => value,
+            Err(_) => 0
+        };
+
+        let total_distance_col: f64 = match row.get(5) {
+            Ok(value) => value,
+            Err(_) => 0.0
+        };
+
+        let total_moving_time_col: f64 = match row.get(6) {
+            Ok(value) => value,
+            Err(_) => 0.0
+        };
+
+        let total_elapsed_time_col: f64 = match row.get(7) {
+            Ok(value) => value,
+            Err(_) => 0.0
+        };
+        
+        let avg_cadence_col: i64 = match row.get(8) {
+            Ok(value) => value,
+            Err(_) => 0
+        };
+
+        let serial_num_col: i64 = match row.get(9) {
+            Ok(value) => value,
+            Err(_) => 0
+        };
+
+        let start_time_col: String = match row.get(10) {
+            Ok(value) => value,
+            Err(_) => String::from("")
+        };
+
+        let threshold_power_col: i64 = match row.get(11) {
+            Ok(value) => value,
+            Err(_) => 0
+        };
 
         let session_laps = get_laps_by_session_id(session_id.to_string()).unwrap();
         let session_records = get_records_by_session_id(session_id.to_string()).unwrap();
@@ -216,12 +263,35 @@ fn get_laps_by_session_id(session_id: String) -> Result<Vec<Lap>> {
         where session_id = ?")?;
 
     let query_result = query.query_map([session_id], |row| {
-        let lap_id: i16 = row.get(0)?;
-        let avg_heart_rate_col: i64 = row.get(1)?;
-        let avg_power_col: i64 = row.get(2)?;
-        let start_time_col:String = row.get(3)?;
-        let distance_col: f64 = row.get(4)?;
-        let total_moving_time_col: f64 = row.get(5)?;
+        let lap_id: i16 = match row.get(0) {
+            Ok(value) => value,
+            Err(_) => 0
+        };
+
+        let avg_heart_rate_col: i64 = match row.get(1) {
+            Ok(value) => value,
+            Err(_) => 0
+        };
+
+        let avg_power_col: i64 = match row.get(2) {
+            Ok(value) => value,
+            Err(_) => 0
+        };
+
+        let start_time_col: String = match row.get(3) {
+            Ok(value) => value,
+            Err(_) => String::from("")
+        };
+
+        let distance_col: f64 = match row.get(4) {
+            Ok(value) => value,
+            Err(_) => 0.0
+        };
+        
+        let total_moving_time_col: f64 = match row.get(5) {
+            Ok(value) => value,
+            Err(_) => 0.0
+        };
 
         Ok(Lap {
             id: Some(lap_id),
@@ -309,9 +379,20 @@ pub fn get_overall_summary(year: i64) -> Result<Summary> {
         from session")?;
 
     let query_result = query.query_map([], |row| {
-        let total_distance_field: f64 = row.get(0)?;
-        let total_moving_time_field: f64 = row.get(1)?;
-        let rides_cound_field: i64 = row.get(2)?;
+        let total_distance_field: f64 = match row.get(0) {
+            Ok(value) => value,
+            Err(_) => 0.0
+        };
+
+        let total_moving_time_field: f64 = match row.get(1) {
+            Ok(value) => value,
+            Err(_) => 0.0
+        };
+
+        let rides_cound_field: i64 = match row.get(2) {
+            Ok(value) => value,
+            Err(_) => 0
+        };
 
         Ok(Summary {
             sub_sport: None,
@@ -342,12 +423,26 @@ pub fn get_detailed_summary(year: i64) -> Result<Vec<Summary>> {
             , count(*)
         from session group by sub_sport")?;
 
-    // TODO: add parameters
     let query_result = query.query_map([], |row| {
-        let sub_sport_field: String = row.get(0)?;
-        let total_distance_field: f64 = row.get(1)?;
-        let total_moving_time_field: f64 = row.get(2)?;
-        let rides_cound_field: i64 = row.get(3)?;
+        let sub_sport_field: String = match row.get(0) {
+            Ok(value) => value,
+            Err(_) => String::from("")
+        };
+
+        let total_distance_field: f64 = match row.get(1) {
+            Ok(value) => value,
+            Err(_) => 0.0
+        };
+
+        let total_moving_time_field: f64 = match row.get(2) {
+            Ok(value) => value,
+            Err(_) => 0.0
+        };
+
+        let rides_cound_field: i64 = match row.get(3) {
+            Ok(value) => value,
+            Err(_) => 0
+        };
 
         Ok(Summary {
             sub_sport: Some(sub_sport_field),
