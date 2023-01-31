@@ -8,8 +8,6 @@ use crate::parser::Session;
 use crate::parser::Lap;
 use crate::summary::Summary;
 
-//TODO: read a path from ~/.fit-reader file.
-//if .fit-reader does not exist or db path variable is missing show and error 
 fn open_connection() -> Result<Connection> {
     let conn = match Connection::open("test.db") {
         Ok(connection) => connection,
