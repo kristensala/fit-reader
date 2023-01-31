@@ -2,6 +2,7 @@ use std::env;
 use std::fs;
 use anyhow::Result;
 use app::App;
+use dotenv;
 
 mod app;
 mod ui;
@@ -11,10 +12,12 @@ mod util;
 mod summary;
 
 fn main() -> Result<()> {
+    dotenv::dotenv().expect("Failed to read .env file");
+
     let mut errors: Vec<String> = Vec::new();
     let mut files_imported: Vec<String> = Vec::new();
 
-    let trainer_road_path = "/home/salakris/Dropbox/Apps/TrainerRoad/";
+    let trainer_road_path = dotenv::var("FIT_FILE_DIR").unwrap();
     let args: Vec<String> = env::args().collect();
 
     if args.len() > 1 && args[1] == "import" {
