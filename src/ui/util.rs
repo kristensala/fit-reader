@@ -74,7 +74,7 @@ pub fn sessio_to_string(session: &Session) -> String {
 pub fn moving_time_to_hour_minute_string(moving_time: f64) -> String {
     let hours = ((moving_time / 60.0) / 60.0) as i64;
     let minutes = ((moving_time / 60.0) % 60.0) as i64;
-    let duration = format!("{}h {}m", hours, minutes);
+    let duration = format!("{}h{}m", hours, minutes);
     return duration;
 }
 

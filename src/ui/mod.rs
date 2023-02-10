@@ -1,4 +1,4 @@
-use chrono::{NaiveDateTime, Datelike};
+use chrono::{NaiveDateTime, Datelike, format};
 use itertools::Itertools;
 use tui::{
     backend::Backend,
@@ -150,29 +150,28 @@ fn draw_overview_section<B: Backend>(f: &mut Frame<B>, layout: Rect, app: &App) 
             let duration = session.total_moving_time as u64;
             return (format!("W{}", naive_datetime.iso_week().week().to_string()), duration);
         }).collect();
-    
-    //todo: why is there a week 52???
-    let result: Vec<(&str, u64)> = data.iter()
-        .map(|(a, b)| (a.as_str(), *b)).collect();
 
-    let summed: Vec<(&str, u64)> = result.iter()
-        .group_by(|(a, _)| a)
+    let summed: Vec<(String, u64)> = data.iter()
+        .group_by(|(week, _)| week)
         .into_iter()
-        .map(|(x, y)| {
-            let sum: u64  = y.into_iter()
+        .map(|(week, duration)| {
+            let sum: u64  = duration.into_iter()
                 .map(|(_, b)| *b)
                 .collect::<Vec<u64>>()
                 .iter()
                 .sum();
-            return (*x, sum);
+            return (format!("{} ({})", week, util::moving_time_to_hour_minute_string(sum as f64)), sum);
         }).collect();
 
+    let result: Vec<(&str, u64)> = summed.iter()
+        .map(|(a, b)| (a.as_str(), *b))
+        .collect();
 
     let bar_chart = BarChart::default()
         .block(Block::default().title("Weekly data by duration").borders(Borders::ALL))
         .bar_width(10)
         .bar_gap(1)
-        .data(&summed);
+        .data(&result);
 
     draw_summary_section(f, chunks[0]);
     f.render_widget(bar_chart, chunks[1]);
