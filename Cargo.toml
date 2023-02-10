@@ -14,4 +14,3 @@ crossterm="0.25"
 chrono="0.4.23"
 itertools = "0.10.5"
 dotenv = "0.15.0"
-tokio = { version = "1.25.0", features = ["full"] }
