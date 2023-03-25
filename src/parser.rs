@@ -102,26 +102,6 @@ impl <'a>FromIterator<&'a FitDataField> for Session {
                 || x.name() == FieldName::ThresholdPower.to_string())
             .collect::<Vec<&FitDataField>>();
 
-        let power_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::AvgPower.to_string())
-            .unwrap();
-
-        let distance_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::TotalDistace.to_string())
-            .unwrap();
-
-        let time_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::TotalElapsedTime.to_string())
-            .unwrap();
-
-        let total_moving_time_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::TotalMovingTime.to_string())
-            .unwrap();
-
-        let avg_candence_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::AvgCadence.to_string())
-            .unwrap();
-
         let sport_field = fields.iter()
             .find(|&&x| x.name() == FieldName::Sport.to_string())
             .unwrap();
@@ -130,30 +110,19 @@ impl <'a>FromIterator<&'a FitDataField> for Session {
             .find(|&&x| x.name() == FieldName::SubSport.to_string())
             .unwrap();
 
-        let threshold_power_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::ThresholdPower.to_string())
-            .unwrap();
-        
-        let avg_heart_rate_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::AvgHeartRate.to_string())
-            .expect("If the file is not corrupt, heart rate field should exist");
-
-        let start_time_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::StartTime.to_string())
-            .unwrap();
 
         return Session {
             id: None,
-            start_time: Value::try_into(start_time_field.value().to_owned()).unwrap(),
-            total_elapsed_time: Value::try_into(time_field.value().to_owned()).unwrap(),
-            total_distance: Value::try_into(distance_field.value().to_owned()).unwrap(),
-            avg_power: Value::try_into(power_field.value().to_owned()).unwrap(),
-            total_moving_time: Value::try_into(total_moving_time_field.value().to_owned()).unwrap(),
-            avg_heart_rate: Value::try_into(avg_heart_rate_field.value().to_owned()).unwrap(),
-            threshold_power: Value::try_into(threshold_power_field.value().to_owned()).unwrap(),
+            start_time: get_number_value(&fields, FieldName::StartTime),
+            total_elapsed_time: get_decimal_value(&fields, FieldName::TotalElapsedTime),
+            total_distance: get_decimal_value(&fields, FieldName::TotalDistace),
+            avg_power: get_number_value(&fields, FieldName::AvgPower),
+            total_moving_time: get_decimal_value(&fields, FieldName::TotalMovingTime),
+            avg_heart_rate: get_number_value(&fields, FieldName::AvgHeartRate),
+            threshold_power: get_number_value(&fields, FieldName::ThresholdPower),
             sport: sport_field.value().to_string(),
             sub_sport: sub_sport_field.value().to_string(),
-            avg_cadence: Value::try_into(avg_candence_field.value().to_owned()).unwrap(),
+            avg_cadence: get_number_value(&fields, FieldName::AvgCadence),
             serial_num: 0,
             laps: Vec::new(),
             records: Vec::new()
@@ -171,33 +140,13 @@ impl <'a>FromIterator<&'a FitDataField> for Lap {
                 || x.name() == FieldName::StartTime.to_string())
             .collect::<Vec<&FitDataField>>();
 
-        let power_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::AvgPower.to_string())
-            .unwrap();
-
-        let distance_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::TotalDistace.to_string())
-            .unwrap();
-
-        let total_moving_time_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::TotalMovingTime.to_string())
-            .unwrap();
-
-        let avg_heart_rate_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::AvgHeartRate.to_string())
-            .expect("If the file is not corrupt, heart rate field should exist");
-
-        let start_time_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::StartTime.to_string())
-            .unwrap();
-
         return Lap {
             id: None,
-            start_time: Value::try_into(start_time_field.value().to_owned()).unwrap(),
-            total_distance: Value::try_into(distance_field.value().to_owned()).unwrap(),
-            avg_power: Value::try_into(power_field.value().to_owned()).unwrap(),
-            total_moving_time: Value::try_into(total_moving_time_field.value().to_owned()).unwrap(),
-            avg_heart_rate: Value::try_into(avg_heart_rate_field.value().to_owned()).unwrap(),
+            start_time: get_number_value(&fields, FieldName::StartTime),
+            total_distance: get_decimal_value(&fields, FieldName::TotalDistace),
+            avg_power: get_number_value(&fields, FieldName::AvgPower),
+            total_moving_time: get_decimal_value(&fields, FieldName::TotalMovingTime),
+            avg_heart_rate: get_number_value(&fields, FieldName::AvgHeartRate),
         }
     }
 }
@@ -211,42 +160,38 @@ impl <'a>FromIterator<&'a FitDataField> for Record {
                 || x.name() == FieldName::HeartRate.to_string())
             .collect::<Vec<&FitDataField>>();
 
-        let power_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::Power.to_string());
-
-        let power_option = match power_field {
-            Some(power) => Value::try_into(power.value().to_owned()).unwrap(),
-            None => 0
-        };
-
-        let distance_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::Distance.to_string());
-        
-        let distance_option = match distance_field {
-            Some(dist) => Value::try_into(dist.value().to_owned()).unwrap(),
-            None => 0 as f64
-        };
-
-        let timestamp_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::Timestamp.to_string())
-            .unwrap();
-
-        let heart_rate_field = fields.iter()
-            .find(|&&x| x.name() == FieldName::HeartRate.to_string());
-
-        let heart_rate_option = match heart_rate_field {
-            Some(heart_rate) => Value::try_into(heart_rate.value().to_owned()).unwrap(),
-            None => 0
-        };
-
         return Record {
             id: None,
-            timestamp: Value::try_into(timestamp_field.value().to_owned()).unwrap(),
-            distance: distance_option,
-            power: power_option,
-            heart_rate: heart_rate_option
+            timestamp: get_number_value(&fields, FieldName::Timestamp),
+            distance: get_decimal_value(&fields, FieldName::Distance),
+            power: get_number_value(&fields, FieldName::Power),
+            heart_rate: get_number_value(&fields, FieldName::HeartRate)
         }
     }
+}
+
+fn get_number_value(fields: &Vec<&FitDataField>, field_name: FieldName) -> i64 {
+    let field = fields.iter()
+        .find(|&&x| x.name() == field_name.to_string());
+
+    let value = match field {
+        Some(data) => Value::try_into(data.value().to_owned()).unwrap_or(0),
+        None => 0
+    };
+
+    return value;
+}
+
+fn get_decimal_value(fields: &Vec<&FitDataField>, field_name: FieldName) -> f64 {
+    let field = fields.iter()
+        .find(|&&x| x.name() == field_name.to_string());
+
+    let value = match field {
+        Some(data) => Value::try_into(data.value().to_owned()).unwrap_or(0.0),
+        None => 0.0
+    };
+
+    return value;
 }
 
 pub fn init(path: &String) -> Result<Session> {
